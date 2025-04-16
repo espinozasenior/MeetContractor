@@ -29,7 +29,10 @@
     "ios": {
       "icon": "./assets/images/app-icon-ios.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.nozasenior.meetcontractor"
+      "bundleIdentifier": "com.nozasenior.meetcontractor",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "web": {
       "favicon": "./assets/images/app-icon-web-favicon.png",
@@ -50,6 +53,11 @@
     ],
     "experiments": {
       "tsconfigPaths": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b7897685-75de-466a-b396-7fd1735ac40c"
+      }
     }
   },
   "ignite": {
