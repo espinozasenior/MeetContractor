@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite"
-import { FC } from "react"
+import { FC } from "react" // Remove useCallback import
 import { Image, ImageStyle, TextStyle, View, ViewStyle } from "react-native"
 import { Button, Text, Screen } from "@/components"
 import { isRTL } from "@/i18n"
@@ -9,6 +9,7 @@ import { $styles, type ThemedStyle } from "@/theme"
 import { useHeader } from "../utils/useHeader"
 import { useSafeAreaInsetsStyle } from "../utils/useSafeAreaInsetsStyle"
 import { useAppTheme } from "@/utils/useAppTheme"
+import { useClerk } from "@clerk/clerk-expo"
 
 const welcomeLogo = require("../../assets/images/logo.png")
 const welcomeFace = require("../../assets/images/welcome-face.png")
@@ -17,7 +18,7 @@ interface WelcomeScreenProps extends AppStackScreenProps<"Welcome"> {}
 
 export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeScreen(_props) {
   const { themed, theme } = useAppTheme()
-
+  const { signOut } = useClerk()
   const { navigation } = _props
   const {
     authenticationStore: { logout },
@@ -27,13 +28,23 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
     navigation.navigate("Demo", { screen: "DemoShowroom", params: {} })
   }
 
-  useHeader(
-    {
-      rightTx: "common:logOut",
-      onRightPress: logout,
-    },
-    [logout],
-  )
+  // Remove the useCallback handler
+
+   useHeader(
+     {
+       rightTx: "common:logOut",
+       // Call the updated async logout action, passing signOut
+       onRightPress: () => {
+         console.log("WelcomeScreen: onRightPress called");
+         // Call the async logout action from the store, passing the signOut function
+         logout(signOut).catch((error) => {
+           // Optional: Handle any errors from the logout flow itself
+           console.error("WelcomeScreen: Error during logout flow execution:", error);
+         });
+       },
+     },
+     [logout, signOut], // Depend directly on logout and signOut
+   )
 
   const $bottomContainerInsets = useSafeAreaInsetsStyle(["bottom"])
 

@@ -16,6 +16,7 @@ import { $styles } from "../theme"
 import { isRTL } from "@/i18n"
 import { useStores } from "../models"
 import { useAppTheme } from "@/utils/useAppTheme"
+import { useClerk } from "@clerk/clerk-expo"
 
 /**
  * @param {string} url - The URL to open in the browser.
@@ -31,6 +32,7 @@ export const DemoDebugScreen: FC<DemoTabScreenProps<"DemoDebug">> = function Dem
   _props,
 ) {
   const { setThemeContextOverride, themeContext, themed } = useAppTheme()
+  const { signOut } = useClerk()
   const {
     authenticationStore: { logout },
   } = useStores()
@@ -144,7 +146,7 @@ export const DemoDebugScreen: FC<DemoTabScreenProps<"DemoDebug">> = function Dem
         <Text style={themed($hint)} tx={`demoDebugScreen:${Platform.OS}ReactotronHint` as const} />
       </View>
       <View style={themed($buttonContainer)}>
-        <Button style={themed($button)} tx="common:logOut" onPress={logout} />
+        <Button style={themed($button)} tx="common:logOut" onPress={() => logout(signOut)} />
       </View>
     </Screen>
   )

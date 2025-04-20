@@ -1,34 +1,39 @@
-import { Instance, SnapshotOut, types } from "mobx-state-tree"
+import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
+import { useClerk } from "@clerk/clerk-expo"
 
 export const AuthenticationStoreModel = types
   .model("AuthenticationStore")
   .props({
     authToken: types.maybe(types.string),
-    authEmail: "",
   })
   .views((store) => ({
     get isAuthenticated() {
       return !!store.authToken
-    },
-    get validationError() {
-      if (store.authEmail.length === 0) return "can't be blank"
-      if (store.authEmail.length < 6) return "must be at least 6 characters"
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.authEmail))
-        return "must be a valid email address"
-      return ""
     },
   }))
   .actions((store) => ({
     setAuthToken(value?: string) {
       store.authToken = value
     },
-    setAuthEmail(value: string) {
-      store.authEmail = value.replace(/ /g, "")
-    },
-    logout() {
-      store.authToken = undefined
-      store.authEmail = ""
-    },
+    logout: flow(function* logout(signOut?: () => Promise<void>) {
+      console.log("logout action: attempting sign out");
+      if (signOut) {
+        try {
+          console.log("logout action: calling signOut");
+          yield signOut();
+          console.log("logout action: signOut completed");
+        } catch (error) {
+          console.error("logout action: Error during Clerk signOut:", error);
+          // Optionally handle the error, e.g., show a message to the user
+          // For now, we'll proceed to clear the local token regardless
+        }
+      } else {
+        console.warn("logout action: signOut function not provided.");
+      }
+      console.log("logout action: clearing token");
+      store.authToken = undefined;
+      console.log("logout action: token cleared");
+    }),
   }))
 
 export interface AuthenticationStore extends Instance<typeof AuthenticationStoreModel> {}
