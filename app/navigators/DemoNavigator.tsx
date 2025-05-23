@@ -1,10 +1,10 @@
 import { BottomTabScreenProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { CompositeScreenProps } from "@react-navigation/native"
-import { TextStyle, ViewStyle } from "react-native"
+import { TextStyle, View, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "../components"
 import { translate } from "@/i18n"
-import { DemoCommunityScreen, DemoShowroomScreen, DemoDebugScreen } from "../screens"
+import { DemoCommunityScreen, DemoShowroomScreen, DemoDebugScreen, ChatScreen } from "../screens"
 import { DemoPodcastListScreen } from "../screens/DemoPodcastListScreen"
 import type { ThemedStyle } from "@/theme"
 import { AppStackParamList, AppStackScreenProps } from "./AppNavigator"
@@ -15,6 +15,7 @@ export type DemoTabParamList = {
   DemoShowroom: { queryIndex?: string; itemIndex?: string }
   DemoDebug: undefined
   DemoPodcastList: undefined
+  DemoChat: undefined
 }
 
 /**
@@ -28,6 +29,9 @@ export type DemoTabScreenProps<T extends keyof DemoTabParamList> = CompositeScre
 >
 
 const Tab = createBottomTabNavigator<DemoTabParamList>()
+
+// Placeholder component to satisfy type requirements
+const PlaceholderScreen = () => null
 
 /**
  * This is the main navigator for the demo screens with a bottom tab bar.
@@ -88,6 +92,7 @@ export function DemoNavigator() {
           ),
         }}
       />
+      
 
       <Tab.Screen
         name="DemoDebug"
@@ -98,6 +103,27 @@ export function DemoNavigator() {
             <Icon icon="debug" color={focused ? colors.tint : colors.tintInactive} size={30} />
           ),
         }}
+      />
+
+      <Tab.Screen
+        name="DemoChat"
+        component={ ChatScreen as any } // Use placeholder component
+        options={{
+          tabBarLabel: "Chat",
+          tabBarIcon: ({ focused }) => (
+            <Icon icon="community" color={focused ? colors.tint : colors.tintInactive} size={30} />
+          ),
+          tabBarAccessibilityLabel: "Chat",
+          tabBarStyle: { display: 'none' } // Hide tab bar for this screen
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default action
+            e.preventDefault()
+            // Navigate to Chat screen in the App stack
+            navigation.navigate("DemoChat")
+          },
+        })}
       />
     </Tab.Navigator>
   )

@@ -8,8 +8,9 @@
 import { ApiResponse, ApisauceInstance, create } from "apisauce"
 import Config from "../../config"
 import { GeneralApiProblem, getGeneralApiProblem } from "./apiProblem"
-import type { ApiConfig, ApiFeedResponse } from "./api.types"
+import type { ApiConfig, ApiFeedResponse, ConversationMessagesResponse } from "./api.types"
 import type { EpisodeSnapshotIn } from "../../models/Episode"
+import { IMessage } from "react-native-gifted-chat"
 
 /**
  * Configuring the apisauce instance.
@@ -67,6 +68,48 @@ export class Api {
         })) ?? []
 
       return { kind: "ok", episodes }
+    } catch (e) {
+      if (__DEV__ && e instanceof Error) {
+        console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)
+      }
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Gets messages for a specific conversation.
+   */
+  async getConversationMessages(conversationId: string): Promise<{ kind: "ok"; messages: IMessage[] } | GeneralApiProblem> {
+    // make the api call
+    const response: ApiResponse<ConversationMessagesResponse> = await this.apisauce.get(
+      `conversations/${conversationId}/messages`,
+    )
+
+    // the typical ways to die when calling an api
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+
+    // transform the data into the format we are expecting
+    try {
+      const rawData = response.data
+
+      // Transform the data into the format expected by GiftedChat
+      const messages: IMessage[] = rawData?.messages.map((message) => ({
+        _id: message.id,
+        text: message.text,
+        createdAt: new Date(message.createdAt),
+        user: {
+          _id: message.senderId,
+          name: message.senderName,
+          avatar: message.senderAvatar,
+        },
+        image: message.imageUrl,
+        // Add any other properties that might be needed
+      })) ?? []
+
+      return { kind: "ok", messages }
     } catch (e) {
       if (__DEV__ && e instanceof Error) {
         console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)

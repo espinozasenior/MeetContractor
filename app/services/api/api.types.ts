@@ -35,6 +35,26 @@ export interface ApiFeedResponse {
 }
 
 /**
+ * Message interface for chat conversations
+ */
+export interface Message {
+  id: string | number
+  text: string
+  createdAt: string
+  senderId: string | number
+  senderName: string
+  senderAvatar?: string
+  imageUrl?: string
+}
+
+/**
+ * Response interface for conversation messages
+ */
+export interface ConversationMessagesResponse {
+  messages: Message[]
+}
+
+/**
  * The options used to configure apisauce.
  */
 export interface ApiConfig {
