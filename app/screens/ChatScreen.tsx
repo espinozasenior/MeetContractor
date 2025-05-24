@@ -132,7 +132,7 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
       <InputToolbar
         {...toolbarProps}
         containerStyle={themed($inputToolbarContainer)}
-        primaryStyle={$inputToolbarPrimary}
+        primaryStyle={themed($inputToolbarPrimary)} // Correctly wrapped with themed()
       />
     )
   }
@@ -176,7 +176,7 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
         renderActions={() => (
           <View style={$attachmentContainer}>
             <Icon 
-              icon="ladybug" 
+              icon="more" 
               size={24} 
               color={theme.colors.palette.chiefsYellow} 
               onPress={handleAttachmentPress}
@@ -215,16 +215,17 @@ const $inputToolbarContainer: ThemedStyle<ViewStyle> = ({ colors, spacing }) => 
   borderTopWidth: StyleSheet.hairlineWidth,
   borderTopColor: colors.separator,
   backgroundColor: colors.background,
-  paddingHorizontal: spacing.lg,
+  paddingHorizontal: spacing.md,
   paddingVertical: spacing.xs,
+  paddingBottom: spacing.xl,
 })
 
 const $inputToolbarPrimary: ThemedStyle<ViewStyle> = ({ spacing }) => ({
-  flex: 1, // Allow the primary container to take up space
+  flex: 0, // Allow the primary container to take up space
   flexDirection: "row",
-  alignItems: "flex-end", // Align items nicely, especially with multi-line input
-  paddingLeft: spacing.sm,
-  paddingRight: spacing.sm,
+  alignItems: "flex-end",
+  justifyContent: "space-between",
+  marginBottom: spacing.sm, // Add some space below the input field
 });
 
 const $textInput: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
