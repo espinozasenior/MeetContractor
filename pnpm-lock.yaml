@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@clerk/clerk-expo':
         specifier: ^2.9.11
-        version: 2.9.11(a5c2217ffa53cd3321f09bca050a8210)
+        version: 2.9.11(n2zn2cr35fsv7zc2ahzq4bkbpm)
       '@expo-google-fonts/space-grotesk':
         specifier: ^0.2.2
         version: 0.2.3
@@ -102,7 +102,7 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1(react-native-keyboard-controller@1.17.1(react-native-reanimated@3.16.7(@babel/core@7.26.10)(react-native@0.76.7(@babel/core@7.26.10)(@babel/preset-env@7.26.9(@babel/core@7.26.10))(@types/react@18.3.20)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.26.10)(@babel/preset-env@7.26.9(@babel/core@7.26.10))(@types/react@18.3.20)(react@18.3.1))(react@18.3.1))(react-native-reanimated@3.16.7(@babel/core@7.26.10)(react-native@0.76.7(@babel/core@7.26.10)(@babel/preset-env@7.26.9(@babel/core@7.26.10))(@types/react@18.3.20)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.26.10)(@babel/preset-env@7.26.9(@babel/core@7.26.10))(@types/react@18.3.20)(react@18.3.1))(react@18.3.1)
       react-native-keyboard-controller:
-        specifier: ^1.12.7
+        specifier: ^1.17.1
         version: 1.17.1(react-native-reanimated@3.16.7(@babel/core@7.26.10)(react-native@0.76.7(@babel/core@7.26.10)(@babel/preset-env@7.26.9(@babel/core@7.26.10))(@types/react@18.3.20)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.26.10)(@babel/preset-env@7.26.9(@babel/core@7.26.10))(@types/react@18.3.20)(react@18.3.1))(react@18.3.1)
       react-native-mmkv:
         specifier: 3.1.0
@@ -953,6 +953,7 @@ packages:
   '@clerk/clerk-js@5.60.0':
     resolution: {integrity: sha512-IHCwK7HebhRcVVozGh93Vf8YyRXyDuoWg5CDHyigFZtF6mxtg04lW2bSPWLiL7glD5egq1yql8DYa7hRoZLElA==}
     engines: {node: '>=18.17.0'}
+    deprecated: Incorrect parsing of the experimental JWT v2 claims. Please update to the latest version. For more information about JWT v2, see https://clerk.com/docs/backend-requests/resources/session-tokens
     peerDependencies:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
@@ -6769,7 +6770,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@clerk/clerk-expo@2.9.11(a5c2217ffa53cd3321f09bca050a8210)':
+  '@clerk/clerk-expo@2.9.11(n2zn2cr35fsv7zc2ahzq4bkbpm)':
     dependencies:
       '@clerk/clerk-js': 5.60.0(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@clerk/clerk-react': 5.27.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
