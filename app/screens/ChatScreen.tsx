@@ -1,148 +1,215 @@
-import React, { useCallback, useEffect, useState } from "react"
-import { View, ViewStyle, StyleSheet, TextStyle } from "react-native"
-import { GiftedChat, IMessage, Bubble, BubbleProps, InputToolbar, InputToolbarProps, Send } from "react-native-gifted-chat"
+import { useCallback, useEffect, useState } from "react"
+import type { ViewStyle, TextStyle } from "react-native"
+import { View } from "react-native"
+import { GiftedChat, Bubble } from "react-native-gifted-chat"
+import type { IMessage, BubbleProps } from "react-native-gifted-chat"
 import { observer } from "mobx-react-lite"
-import { Header, Icon } from "@/components"
-import { AppStackScreenProps } from "@/navigators"
-import { useStores } from "@/models"
+import { Header, ChatInputToolbar } from "@/components"
+import type { AppStackScreenProps } from "@/navigators"
 import { api } from "@/services/api"
 import { useAppTheme } from "@/utils/useAppTheme"
-import { ThemedStyle } from "@/theme"
+import type { ThemedStyle } from "@/theme"
 
 export interface ChatScreenProps extends AppStackScreenProps<"Chat"> {}
 
+const DEFAULT_LIMIT = 15
+
 export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
   const { navigation } = props
-  const { themed, theme } = useAppTheme() // Get theme object
+  const { themed, theme } = useAppTheme()
   const [messages, setMessages] = useState<IMessage[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loadingEarlier, setLoadingEarlier] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined)
+  const [inputText, setInputText] = useState("")
   const conversationId = "1" // Default conversation ID, could be passed via navigation params
 
-  // Fetch messages from the API
-  const fetchMessages = useCallback(async () => {
-    setLoading(true)
+  // Fetch initial messages from the API
+  const fetchInitialMessages = useCallback(async () => {
     try {
-      const result = await api.getConversationMessages(conversationId)
-      if (result.kind === "ok" && result.messages) {
-        // Map API messages to GiftedChat format if necessary
-        // Assuming result.messages are already in IMessage format or adaptable
-        const formattedMessages = result.messages.map((msg: any) => ({
-          _id: msg.id || Math.random().toString(36).substring(7),
-          text: msg.text,
-          createdAt: new Date(msg.createdAt),
-          user: {
-            _id: msg.senderId === 1 ? 1 : 2, // Distinguish sender/receiver
-            name: msg.senderName || (msg.senderId === 1 ? "User" : "Contractor"),
-            // avatar: 'url_to_avatar' // Optional avatar
-          },
-        })).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Sort messages descending
+      const result = await api.getConversationMessages(conversationId, {
+        limit: DEFAULT_LIMIT,
+      })
+
+      if (result.kind === "ok") {
+        const formattedMessages = result.messages
+          .map((msg) => ({
+            _id: msg._id,
+            text: msg.text,
+            createdAt: msg.createdAt,
+            user: msg.user,
+            image: msg.image,
+          }))
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
         setMessages(formattedMessages)
+        setHasMore(result.hasMore)
+        setNextCursor(result.nextCursor)
       } else {
         console.error("Failed to fetch messages", result)
         // Set some default messages for UI testing if API fails
         setMessages([
           {
             _id: 1,
-            text: 'Hello developer',
+            text: "Hello developer",
             createdAt: new Date(),
             user: {
               _id: 2,
-              name: 'Admin',
-              // avatar: 'https://placeimg.com/140/140/any',
+              name: "Admin",
             },
           },
           {
             _id: 2,
-            text: 'This is the Chiefs theme!',
+            text: "This is the Chiefs theme!",
             createdAt: new Date(Date.now() - 60000),
             user: {
               _id: 1,
-              name: 'User',
+              name: "User",
             },
           },
         ])
+        setHasMore(false)
       }
     } catch (error) {
       console.error("Error fetching messages:", error)
-       // Set default messages on error
-       setMessages([
+      // Set default messages on error
+      setMessages([
         {
           _id: 1,
-          text: 'Hello developer (error state)',
+          text: "Hello developer (error state)",
           createdAt: new Date(),
           user: {
             _id: 2,
-            name: 'React Native',
+            name: "React Native",
           },
         },
       ])
-    } finally {
-      setLoading(false)
+      setHasMore(false)
     }
-  }, [conversationId])
+  }, [])
+
+  // Load earlier messages (pagination)
+  const loadEarlierMessages = useCallback(async () => {
+    if (!hasMore || loadingEarlier || !nextCursor) return
+
+    setLoadingEarlier(true)
+    try {
+      const result = await api.getConversationMessages(conversationId, {
+        limit: DEFAULT_LIMIT,
+        cursor: nextCursor,
+      })
+
+      if (result.kind === "ok") {
+        const formattedMessages = result.messages
+          .map((msg) => ({
+            _id: msg._id,
+            text: msg.text,
+            createdAt: msg.createdAt,
+            user: msg.user,
+            image: msg.image,
+          }))
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+        // Prepend older messages to the existing ones
+        setMessages((previousMessages) => [...previousMessages, ...formattedMessages])
+        setHasMore(result.hasMore)
+        setNextCursor(result.nextCursor)
+      } else {
+        console.error("Failed to load earlier messages", result)
+      }
+    } catch (error) {
+      console.error("Error loading earlier messages:", error)
+    } finally {
+      setLoadingEarlier(false)
+    }
+  }, [hasMore, loadingEarlier, nextCursor])
 
   useEffect(() => {
-    fetchMessages()
-  }, [fetchMessages])
+    fetchInitialMessages()
+  }, [fetchInitialMessages])
 
-  const onSend = useCallback(
-    (newMessages: IMessage[] = []) => {
-      setMessages((previousMessages) => GiftedChat.append(previousMessages, newMessages))
-      // Send message to API logic (currently commented out)
-      // try {
-      //   const messageToSend = newMessages[0]
-      //   await api.sendMessage(conversationId, messageToSend.text)
-      //   fetchMessages()
-      // } catch (error) {
-      //   console.error("Error sending message:", error)
-      // }
-    },
-    [fetchMessages, conversationId], // Added fetchMessages dependency
-  )
+  // Handle sending messages with our custom input
+  const handleSendMessage = useCallback(async () => {
+    if (inputText.trim().length === 0) return
 
-  // Custom Bubble component using theme colors
-  const renderBubble = (bubbleProps: BubbleProps<IMessage>) => {
-    return (
-      <Bubble
-        {...bubbleProps}
-        wrapperStyle={{
-          right: {
-            // Use theme colors - assuming chiefsRed is defined in palette
-            backgroundColor: theme.colors.palette.angry500, // Example: Using angry500 for user's bubble
-          },
-          left: {
-            backgroundColor: theme.colors.palette.neutral300, // Example: Using neutral300 for other's bubble
-          },
-        }}
-        textStyle={{
-          right: {
-            color: theme.colors.palette.neutral100, // Light text on dark bubble
-          },
-          left: {
-            color: theme.colors.text, // Default text color on light bubble
-          },
-        }}
-      />
-    )
-  }
+    const newMessage: IMessage = {
+      _id: Math.random().toString(36).substring(7),
+      text: inputText.trim(),
+      createdAt: new Date(),
+      user: {
+        _id: 1,
+        name: "User",
+      },
+    }
 
-  // Custom Input Toolbar using theme colors
-  const renderInputToolbar = (toolbarProps: InputToolbarProps<IMessage>) => {
-    return (
-      <InputToolbar
-        {...toolbarProps}
-        containerStyle={themed($inputToolbarContainer)}
-        primaryStyle={themed($inputToolbarPrimary)} // Correctly wrapped with themed()
-      />
-    )
-  }
+    // Optimistically add the message to the UI
+    setMessages((previousMessages) => GiftedChat.append(previousMessages, [newMessage]))
+
+    // Clear input
+    setInputText("")
+
+    // Send message to API
+    try {
+      const result = await api.sendMessage(
+        conversationId,
+        newMessage.text,
+        undefined, // attachments (optional)
+        "user", // role
+      )
+
+      if (result.kind === "ok") {
+        console.log("Message sent successfully:", result.message)
+        // Optionally refresh messages to get the latest state from server
+        // await fetchInitialMessages()
+      } else {
+        console.error("Failed to send message:", result)
+        // Optionally remove the optimistically added message or show error
+      }
+    } catch (error) {
+      console.error("Error sending message:", error)
+      // Optionally remove the optimistically added message or show error
+    }
+  }, [inputText])
 
   // Handle attachment button press
-  const handleAttachmentPress = () => {
-    // Implement attachment functionality here
-    console.log('Attachment button pressed')
+  const handleAttachmentPress = useCallback(() => {
+    console.log("Attachment button pressed")
     // Future implementation: open document picker, camera, etc.
-  }
+  }, [])
+
+  // Handle emoji button press
+  const handleEmojiPress = useCallback(() => {
+    console.log("Emoji button pressed")
+    // Future implementation: open emoji picker
+  }, [])
+
+  // Custom Bubble component using theme colors
+  const renderBubble = useCallback(
+    (bubbleProps: BubbleProps<IMessage>) => {
+      return (
+        <Bubble
+          {...bubbleProps}
+          wrapperStyle={{
+            right: {
+              backgroundColor: theme.colors.palette.angry500,
+            },
+            left: {
+              backgroundColor: theme.colors.palette.neutral300,
+            },
+          }}
+          textStyle={{
+            right: {
+              color: theme.colors.palette.neutral100,
+            },
+            left: {
+              color: theme.colors.text,
+            },
+          }}
+        />
+      )
+    },
+    [theme.colors],
+  )
 
   return (
     <View style={themed($container)}>
@@ -150,43 +217,38 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
         title="Chat"
         leftIcon="back"
         onLeftPress={() => navigation.goBack()}
-        titleStyle={$headerTitle} // Optional: Style header title
-        style={themed($header)} // Apply themed style to Header
+        titleStyle={$headerTitle}
+        style={themed($header)}
       />
+
       <GiftedChat
         messages={messages}
-        onSend={(messages) => onSend(messages)}
+        onSend={() => {}} // We handle sending with our custom input
         user={{
           _id: 1,
           name: "User",
         }}
-        renderBubble={renderBubble} // Use custom bubble
-        renderInputToolbar={renderInputToolbar} // Use custom input toolbar
-        textInputProps={{ style: themed($textInput) }} // Apply style to make input flexible
+        renderBubble={renderBubble}
+        renderInputToolbar={() => null} // Hide default input toolbar
         renderAvatarOnTop
         showAvatarForEveryMessage
-        alwaysShowSend
-        // Customize Send button using theme colors
-        renderSend={(sendProps) => (
-          <Send {...sendProps} containerStyle={$sendContainer}>
-            <Icon icon="send" size={24} color={theme.colors.palette.chiefsYellow} />
-          </Send>
-        )}
-        // Add actions to the left of the input field
-        renderActions={() => (
-          <View style={$attachmentContainer}>
-            <Icon 
-              icon="more" 
-              size={24} 
-              color={theme.colors.palette.chiefsYellow} 
-              onPress={handleAttachmentPress}
-            />
-          </View>
-        )}
-        listViewProps={{
-          // contentContainerStyle: themed($chatListView), // Removed to fix type error
-        }}
-        isLoadingEarlier={loading}
+        isLoadingEarlier={loadingEarlier}
+        onLoadEarlier={loadEarlierMessages}
+        infiniteScroll
+        loadEarlier={hasMore}
+      />
+
+      {/* Our Custom Input Toolbar */}
+      <ChatInputToolbar
+        text={inputText}
+        onTextChanged={setInputText}
+        onSend={handleSendMessage}
+        placeholder="Escribe un mensaje..."
+        maxLength={1000}
+        showAttachmentButton={true}
+        showEmojiButton={true}
+        onAttachmentPress={handleAttachmentPress}
+        onEmojiPress={handleEmojiPress}
       />
     </View>
   )
@@ -195,65 +257,13 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
 // Styles using ThemedStyle
 const $container: ThemedStyle<ViewStyle> = ({ colors }) => ({
   flex: 1,
-  backgroundColor: colors.background, // Use theme background color
+  backgroundColor: colors.background,
 })
 
 const $header: ThemedStyle<ViewStyle> = ({ colors }) => ({
-  backgroundColor: colors.background, // Use theme background for header
+  backgroundColor: colors.background,
 })
 
 const $headerTitle: TextStyle = {
-  // Add specific title styling if needed, potentially using theme fonts/colors
-}
-
-const $chatListView: ThemedStyle<ViewStyle> = ({ colors }) => ({
-  // Use theme background or a specific chat background color from theme
-  backgroundColor: colors.background, // Or perhaps a dedicated chat background color if defined
-})
-
-const $inputToolbarContainer: ThemedStyle<ViewStyle> = ({ colors, spacing }) => ({
-  borderTopWidth: StyleSheet.hairlineWidth,
-  borderTopColor: colors.separator,
-  backgroundColor: colors.background,
-  paddingHorizontal: spacing.md,
-  paddingVertical: spacing.xs,
-  paddingBottom: spacing.xl,
-})
-
-const $inputToolbarPrimary: ThemedStyle<ViewStyle> = ({ spacing }) => ({
-  flex: 0, // Allow the primary container to take up space
-  flexDirection: "row",
-  alignItems: "flex-end",
-  justifyContent: "space-between",
-  marginBottom: spacing.sm, // Add some space below the input field
-});
-
-const $textInput: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
-  flex: 1, // Make the text input expand
-  backgroundColor: colors.background,
-  fontFamily: typography.primary.normal,
-  borderRadius: 20, // Make it rounded
-  paddingHorizontal: 12,
-  paddingVertical: 8, // Adjust vertical padding
-  fontSize: 16,
-  color: colors.text,
-  // Ensure multi-line input works well
-  minHeight: 40, // Set a minimum height similar to send button
-  maxHeight: 120, // Optional: Limit max height
-  lineHeight: 20, // Adjust line height for better text alignment
-});
-
-const $sendContainer: ViewStyle = {
-  justifyContent: "center",
-  alignItems: "center",
-  paddingHorizontal: 10,
-  height: 44, // Standard touch target height
-}
-
-const $attachmentContainer: ViewStyle = {
-  justifyContent: "center",
-  alignItems: "center",
-  paddingHorizontal: 10,
-  height: 44, // Standard touch target height
-  marginLeft: 5,
+  // Add specific title styling if needed
 }
