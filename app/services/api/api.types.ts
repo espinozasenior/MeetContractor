@@ -39,12 +39,15 @@ export interface ApiFeedResponse {
  */
 export interface Message {
   id: string | number
-  text: string
+  conversationId: string | number
+  role: "user" | "admin" | "assistant" | "system" | "data"
+  content: string
+  attachments?: MessageAttachment[]
   createdAt: string
-  senderId: string | number
-  senderName: string
-  senderAvatar?: string
-  imageUrl?: string
+  author: {
+    id: string
+    name: string
+  }
 }
 
 /**
@@ -99,6 +102,10 @@ export interface ResponseMessage {
   content: string | null
   attachments?: MessageAttachment[]
   createdAt: string
+  author: {
+    id: string
+    name: string
+  }
 }
 
 /**

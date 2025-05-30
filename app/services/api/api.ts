@@ -118,14 +118,15 @@ export class Api {
       const messages: IMessage[] =
         rawData?.messages.map((message) => ({
           _id: message.id,
-          text: message.text,
+          text: message.content,
           createdAt: new Date(message.createdAt),
           user: {
-            _id: message.senderId,
-            name: message.senderName,
-            avatar: message.senderAvatar,
+            _id: message.author.id,
+            name: message.author.name,
           },
-          image: message.imageUrl,
+          ...(message.attachments?.[0]?.type === "image" && {
+            image: message.attachments?.[0]?.url,
+          }),
         })) ?? []
 
       return {
@@ -185,8 +186,8 @@ export class Api {
         text: rawData.message.content || "",
         createdAt: new Date(rawData.message.createdAt),
         user: {
-          _id: rawData.message.role === "user" ? 1 : 2,
-          name: rawData.message.role === "user" ? "User" : "Assistant",
+          _id: rawData.message.author.id,
+          name: rawData.message.author.name,
         },
         ...(rawData.message.attachments &&
           rawData.message.attachments.length > 0 &&
