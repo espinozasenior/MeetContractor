@@ -26,7 +26,6 @@ export interface ChatInputToolbarProps {
   showAttachmentButton?: boolean
   showEmojiButton?: boolean
   onAttachmentPress?: () => void
-  onEmojiPress?: () => void
 }
 
 export const ChatInputToolbar = observer(function ChatInputToolbar(

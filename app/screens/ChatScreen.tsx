@@ -177,12 +177,6 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
     // Future implementation: open document picker, camera, etc.
   }, [])
 
-  // Handle emoji button press
-  const handleEmojiPress = useCallback(() => {
-    console.log("Emoji button pressed")
-    // Future implementation: open emoji picker
-  }, [])
-
   // Custom Bubble component using theme colors
   const renderBubble = useCallback(
     (bubbleProps: BubbleProps<IMessage>) => {
@@ -248,7 +242,6 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
         showAttachmentButton={true}
         showEmojiButton={true}
         onAttachmentPress={handleAttachmentPress}
-        onEmojiPress={handleEmojiPress}
       />
     </View>
   )
