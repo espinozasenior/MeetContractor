@@ -3,7 +3,7 @@ import { FC, ReactElement, useCallback, useEffect, useRef, useState } from "reac
 import { Image, ImageStyle, Platform, SectionList, TextStyle, View, ViewStyle } from "react-native"
 import { Drawer } from "react-native-drawer-layout"
 import { type ContentStyle } from "@shopify/flash-list"
-import { ListItem, ListView, ListViewRef, Screen, Text } from "../../components"
+import { Button, ListItem, ListView, ListViewRef, Screen, Text } from "../../components"
 import { TxKeyPath, isRTL, translate } from "@/i18n"
 import { DemoTabParamList, DemoTabScreenProps } from "../../navigators/DemoNavigator"
 import type { Theme, ThemedStyle } from "@/theme"
@@ -93,6 +93,7 @@ const isAndroid = Platform.OS === "android"
 
 export const DemoShowroomScreen: FC<DemoTabScreenProps<"DemoShowroom">> =
   function DemoShowroomScreen(_props) {
+    const { navigation } = _props
     const [open, setOpen] = useState(false)
     const timeout = useRef<ReturnType<typeof setTimeout>>()
     const listRef = useRef<SectionList>(null)
@@ -223,6 +224,14 @@ export const DemoShowroomScreen: FC<DemoTabScreenProps<"DemoShowroom">> =
             ListHeaderComponent={
               <View style={themed($heading)}>
                 <Text preset="heading" tx="demoShowroomScreen:jumpStart" />
+                <Button
+                  preset="reversed"
+                  onPress={() => {
+                    navigation.navigate("CreateProject")
+                  }}
+                >
+                  Create Project
+                </Button>
               </View>
             }
             onScrollToIndexFailed={scrollToIndexFailed}
@@ -257,6 +266,7 @@ const $sectionListContentContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
 
 const $heading: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginBottom: spacing.xxxl,
+  gap: spacing.lg,
 })
 
 const $logoImage: ImageStyle = {
