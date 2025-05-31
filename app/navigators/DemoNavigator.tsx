@@ -92,7 +92,6 @@ export function DemoNavigator() {
           ),
         }}
       />
-      
 
       <Tab.Screen
         name="DemoDebug"
@@ -107,14 +106,14 @@ export function DemoNavigator() {
 
       <Tab.Screen
         name="DemoChat"
-        component={ ChatScreen as any } // Use placeholder component
+        component={ChatScreen as any} // Use placeholder component
         options={{
           tabBarLabel: "Chat",
           tabBarIcon: ({ focused }) => (
             <Icon icon="community" color={focused ? colors.tint : colors.tintInactive} size={30} />
           ),
           tabBarAccessibilityLabel: "Chat",
-          tabBarStyle: { display: 'none' } // Hide tab bar for this screen
+          tabBarStyle: { display: "none" }, // Hide tab bar for this screen
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
