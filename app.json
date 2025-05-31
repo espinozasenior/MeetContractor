@@ -49,6 +49,13 @@
           "resizeMode": "contain",
           "backgroundColor": "#191015"
         }
+      ],
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0",
+          "androidGoogleMapsApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
+        }
       ]
     ],
     "experiments": {
