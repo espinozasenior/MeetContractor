@@ -9,6 +9,7 @@ import type { AppStackScreenProps } from "@/navigators"
 import { api } from "@/services/api"
 import { useAppTheme } from "@/utils/useAppTheme"
 import type { ThemedStyle } from "@/theme"
+import { useSession } from "@clerk/clerk-expo"
 
 export interface ChatScreenProps extends AppStackScreenProps<"Chat"> {}
 
@@ -17,6 +18,7 @@ const DEFAULT_LIMIT = 15
 export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
   const { navigation } = props
   const { themed, theme } = useAppTheme()
+  const { session } = useSession()
   const [messages, setMessages] = useState<IMessage[]>([])
   const [loadingEarlier, setLoadingEarlier] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -27,7 +29,7 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
   // Fetch initial messages from the API
   const fetchInitialMessages = useCallback(async () => {
     try {
-      const result = await api.getConversationMessages(conversationId, {
+      const result = await api.getConversationMessages(session?.getToken, conversationId, {
         limit: DEFAULT_LIMIT,
       })
 
@@ -86,7 +88,7 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
       ])
       setHasMore(false)
     }
-  }, [])
+  }, [session?.getToken])
 
   // Load earlier messages (pagination)
   const loadEarlierMessages = useCallback(async () => {
@@ -94,7 +96,7 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
 
     setLoadingEarlier(true)
     try {
-      const result = await api.getConversationMessages(conversationId, {
+      const result = await api.getConversationMessages(session?.getToken, conversationId, {
         limit: DEFAULT_LIMIT,
         cursor: nextCursor,
       })
@@ -122,7 +124,7 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
     } finally {
       setLoadingEarlier(false)
     }
-  }, [hasMore, loadingEarlier, nextCursor])
+  }, [hasMore, loadingEarlier, nextCursor, session?.getToken])
 
   useEffect(() => {
     fetchInitialMessages()
@@ -151,6 +153,7 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
     // Send message to API
     try {
       const result = await api.sendMessage(
+        session?.getToken,
         conversationId,
         newMessage.text,
         undefined, // attachments (optional)
@@ -169,7 +172,7 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
       console.error("Error sending message:", error)
       // Optionally remove the optimistically added message or show error
     }
-  }, [inputText])
+  }, [inputText, session?.getToken])
 
   // Handle attachment button press
   const handleAttachmentPress = useCallback(() => {
