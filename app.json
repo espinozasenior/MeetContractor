@@ -24,7 +24,12 @@
         "foregroundImage": "./assets/images/app-icon-android-adaptive-foreground.png",
         "backgroundImage": "./assets/images/app-icon-android-adaptive-background.png"
       },
-      "allowBackup": false
+      "allowBackup": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
+        }
+      }
     },
     "ios": {
       "icon": "./assets/images/app-icon-ios.png",
@@ -32,6 +37,9 @@
       "bundleIdentifier": "com.nozasenior.meetcontractor",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
       }
     },
     "web": {

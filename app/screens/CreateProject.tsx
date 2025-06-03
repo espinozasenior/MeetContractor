@@ -1,6 +1,9 @@
-import { useState } from "react"
-import { View, Text, StyleSheet, SafeAreaView, Alert, ScrollView } from "react-native"
+import { View, StyleSheet, Alert, StatusBar } from "react-native"
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete"
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
+import { useState } from "react"
+import { useNavigation } from "@react-navigation/native"
+import { Icon } from "@/components"
 
 const colors = {
   background: "#f5f5f5",
@@ -18,10 +21,27 @@ const colors = {
   transparent: "transparent",
 }
 
+interface LocationData {
+  latitude: number
+  longitude: number
+  title: string
+}
+
 export const CreateProject = () => {
+  const navigation = useNavigation()
+  const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null)
+
   const handlePlaceSelect = (data: any, details: any = null) => {
     console.log("Selected place data:", data)
     console.log("Selected place details:", details)
+
+    const location = {
+      latitude: details?.geometry?.location?.lat || 0,
+      longitude: details?.geometry?.location?.lng || 0,
+      title: data.description,
+    }
+
+    setSelectedLocation(location)
 
     // Show alert with the selected place
     Alert.alert(
@@ -31,13 +51,49 @@ export const CreateProject = () => {
     )
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Crear Proyecto</Text>
-        <Text style={styles.subtitle}>Selecciona una ubicación</Text>
+  const handleBackPress = () => {
+    navigation.goBack()
+  }
 
-        <View style={styles.autocompleteContainer}>
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
+
+      {/* MapView as background */}
+      <MapView
+        style={styles.mapView}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={{
+          latitude: 19.432608, // Default to Mexico City
+          longitude: -99.133209,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+      >
+        {selectedLocation && (
+          <Marker
+            coordinate={{
+              latitude: selectedLocation.latitude,
+              longitude: selectedLocation.longitude,
+            }}
+            title={selectedLocation.title}
+            pinColor={colors.success}
+          />
+        )}
+      </MapView>
+
+      {/* Search container with back arrow and GooglePlacesAutocomplete */}
+      <View style={styles.searchContainer}>
+        <Icon
+          icon="back"
+          size={24}
+          color={colors.text}
+          onPress={handleBackPress}
+          containerStyle={styles.backIconContainer}
+        />
+        <View style={styles.autocompleteWrapper}>
           <GooglePlacesAutocomplete
             placeholder="Buscar ubicación..."
             onPress={handlePlaceSelect}
@@ -66,15 +122,31 @@ export const CreateProject = () => {
             filterReverseGeocodingByTypes={["locality", "administrative_area_level_3"]}
           />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  autocompleteContainer: {
-    marginBottom: 20,
-    zIndex: 1,
+  autocompleteWrapper: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  backIconContainer: {
+    alignItems: "center",
+    backgroundColor: colors.white,
+    borderRadius: 25,
+    elevation: 3,
+    height: 50,
+    justifyContent: "center",
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    width: 50,
   },
   container: {
     backgroundColor: colors.background,
@@ -84,7 +156,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
   },
-
   listView: {
     backgroundColor: colors.white,
     borderRadius: 8,
@@ -98,22 +169,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
   },
+  mapView: {
+    flex: 1,
+  },
   row: {
     backgroundColor: colors.white,
     borderBottomColor: colors.borderLight,
     borderBottomWidth: 1,
     padding: 15,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-  },
-
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: "center",
+  searchContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    left: 20,
+    position: "absolute",
+    right: 20,
+    top: 60, // Position below status bar
+    zIndex: 1,
   },
   textInput: {
     backgroundColor: colors.white,
@@ -136,13 +208,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.transparent,
     borderBottomWidth: 0,
     borderTopWidth: 0,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
   },
 })
 
