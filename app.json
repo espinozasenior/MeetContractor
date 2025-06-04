@@ -74,7 +74,8 @@
     "extra": {
       "eas": {
         "projectId": "b7897685-75de-466a-b396-7fd1735ac40c"
-      }
+      },
+      "googleApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
     }
   },
   "ignite": {
