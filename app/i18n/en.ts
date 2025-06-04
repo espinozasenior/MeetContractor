@@ -13,6 +13,10 @@ const en = {
     readyForLaunch: "Your app, almost ready for launch!",
     exciting: "(ohh, this is exciting!)",
     letsGo: "Let's go!",
+    organizationHeading: "Every photo, video, and chat organized by job location.",
+    projectName: "East High School",
+    projectAddress: "3287 Elmwood Drive",
+    startFirstProject: "Start My First Project",
   },
   errorScreen: {
     title: "Something went wrong!",
