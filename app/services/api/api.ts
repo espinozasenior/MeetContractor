@@ -7,6 +7,7 @@
  */
 import { type ApiResponse, type ApisauceInstance, create } from "apisauce"
 import Config from "../../config"
+import type { GetToken } from "@clerk/types"
 import { type GeneralApiProblem, getGeneralApiProblem } from "./apiProblem"
 import type {
   ApiConfig,
@@ -88,11 +89,14 @@ export class Api {
    * Gets messages for a specific conversation with pagination support.
    */
   async getConversationMessages(
+    getToken: GetToken | undefined,
     conversationId: string,
     params?: GetMessagesParams,
   ): Promise<
     { kind: "ok"; messages: IMessage[]; hasMore: boolean; nextCursor?: string } | GeneralApiProblem
   > {
+    // get the token from the clerk session
+    const token = await getToken?.()
     // Prepare query parameters
     const queryParams: Record<string, string | number> = {}
     if (params?.limit) queryParams.limit = params.limit
@@ -102,8 +106,13 @@ export class Api {
     const response: ApiResponse<ConversationMessagesResponse> = await this.apisauce.get(
       `conversations/${conversationId}/messages`,
       queryParams,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     )
-
+    console.log("response", response)
     // the typical ways to die when calling an api
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
@@ -118,14 +127,15 @@ export class Api {
       const messages: IMessage[] =
         rawData?.messages.map((message) => ({
           _id: message.id,
-          text: message.text,
+          text: message.content,
           createdAt: new Date(message.createdAt),
           user: {
-            _id: message.senderId,
-            name: message.senderName,
-            avatar: message.senderAvatar,
+            _id: message.author.id,
+            name: message.author.name,
           },
-          image: message.imageUrl,
+          ...(message.attachments?.[0]?.type === "image" && {
+            image: message.attachments?.[0]?.url,
+          }),
         })) ?? []
 
       return {
@@ -146,11 +156,15 @@ export class Api {
    * Sends a new message to a conversation.
    */
   async sendMessage(
+    getToken: GetToken | undefined,
     conversationId: string,
     content: string,
     attachments?: MessageAttachment[],
     role: "user" | "admin" | "assistant" | "system" | "data" = "user",
   ): Promise<{ kind: "ok"; message: IMessage } | GeneralApiProblem> {
+    // get the token from the clerk session
+    const token = await getToken?.()
+    // prepare the request body
     const requestBody: SendMessageRequest = {
       data: {
         content,
@@ -163,6 +177,11 @@ export class Api {
     const response: ApiResponse<SendMessageResponse> = await this.apisauce.post(
       `conversations/${conversationId}/messages`,
       requestBody,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     )
 
     // the typical ways to die when calling an api
@@ -185,8 +204,8 @@ export class Api {
         text: rawData.message.content || "",
         createdAt: new Date(rawData.message.createdAt),
         user: {
-          _id: rawData.message.role === "user" ? 1 : 2,
-          name: rawData.message.role === "user" ? "User" : "Assistant",
+          _id: rawData.message.author.id,
+          name: rawData.message.author.name,
         },
         ...(rawData.message.attachments &&
           rawData.message.attachments.length > 0 &&
