@@ -6394,7 +6394,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@clerk/clerk-expo@2.9.11(zejan6rst7ebqgcke6ac43egva)':
+  '@clerk/clerk-expo@2.9.11(n2zn2cr35fsv7zc2ahzq4bkbpm)':
     dependencies:
       '@clerk/clerk-js': 5.60.0(@types/react@18.3.20)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@clerk/clerk-react': 5.27.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)

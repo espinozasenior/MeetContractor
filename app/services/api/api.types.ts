@@ -52,6 +52,60 @@ export interface Message {
  */
 export interface ConversationMessagesResponse {
   messages: Message[]
+  pagination?: {
+    hasMore: boolean
+    nextCursor?: string
+    totalCount?: number
+  }
+}
+
+/**
+ * Parameters for getting conversation messages with pagination
+ */
+export interface GetMessagesParams {
+  limit?: number
+  cursor?: string
+}
+
+/**
+ * Attachment structure for messages
+ */
+export interface MessageAttachment {
+  type: "image" | "file" | "audio" | "video"
+  url: string
+  name?: string
+  size?: number
+  mimeType?: string
+}
+
+/**
+ * Request body for sending a new message
+ */
+export interface SendMessageRequest {
+  data: {
+    content: string
+    attachments?: MessageAttachment[]
+    role: "user" | "admin" | "assistant" | "system" | "data"
+  }
+}
+
+/**
+ * Backend message structure from API response
+ */
+export interface ResponseMessage {
+  id: string
+  conversationId: string
+  role: "user" | "admin" | "assistant" | "system" | "data"
+  content: string | null
+  attachments?: MessageAttachment[]
+  createdAt: string
+}
+
+/**
+ * Response interface for sending a message
+ */
+export interface SendMessageResponse {
+  message: ResponseMessage
 }
 
 /**

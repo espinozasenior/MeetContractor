@@ -1,5 +1,5 @@
 import demoEs from "./demo-es"
-import { Translations } from "./en"
+import type { Translations } from "./en"
 
 const es: Translations = {
   common: {
@@ -14,6 +14,10 @@ const es: Translations = {
     readyForLaunch: "Tu app, casi lista para su lanzamiento",
     exciting: "(¡ohh, esto es emocionante!)",
     letsGo: "¡Vamos!",
+    organizationHeading: "Cada foto, video y chat organizado por ubicación de trabajo.",
+    projectName: "Escuela Secundaria Este",
+    projectAddress: "3287 Elmwood Drive",
+    startFirstProject: "Comenzar Mi Primer Proyecto",
   },
   errorScreen: {
     title: "¡Algo salió mal!",
@@ -40,6 +44,10 @@ const es: Translations = {
       "Ingresa tus datos a continuación para desbloquear información ultra secreta. Nunca vas a adivinar lo que te espera al otro lado. O quizás si lo harás; la verdad no hay mucha ciencia alrededor.",
     emailFieldLabel: "Email",
     passwordFieldLabel: "Contraseña",
+    alreadySignedIn: "Ya has iniciado sesión",
+    loading: "Cargando...",
+    noAccount: "¿No tienes cuenta? Regístrate",
+    haveAccount: "¿Ya tienes cuenta? Inicia sesión",
     emailFieldPlaceholder: "Ingresa tu email",
     passwordFieldPlaceholder: "Contraseña super secreta aquí",
     tapToLogIn: "¡Presiona acá para iniciar sesión!",
