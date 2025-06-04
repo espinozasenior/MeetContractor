@@ -15,7 +15,7 @@ config.transformer.getTransformOptions = async () => ({
     inlineRequires: true,
   },
 })
-
+config.resolver.unstable_enablePackageExports = false
 // This helps support certain popular third-party libraries
 // such as Firebase that use the extension cjs.
 config.resolver.sourceExts.push("cjs")
