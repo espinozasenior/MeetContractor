@@ -1,9 +1,9 @@
-import { View, StyleSheet, Alert, StatusBar } from "react-native"
+import { View, StyleSheet, StatusBar } from "react-native"
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete"
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
-import { useState } from "react"
 import { useNavigation } from "@react-navigation/native"
 import { Icon } from "@/components"
+import Constants from "expo-constants"
 
 const colors = {
   background: "#f5f5f5",
@@ -21,35 +21,9 @@ const colors = {
   transparent: "transparent",
 }
 
-interface LocationData {
-  latitude: number
-  longitude: number
-  title: string
-}
-
 export const CreateProject = () => {
   const navigation = useNavigation()
-  const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null)
-
-  const handlePlaceSelect = (data: any, details: any = null) => {
-    console.log("Selected place data:", data)
-    console.log("Selected place details:", details)
-
-    const location = {
-      latitude: details?.geometry?.location?.lat || 0,
-      longitude: details?.geometry?.location?.lng || 0,
-      title: data.description,
-    }
-
-    setSelectedLocation(location)
-
-    // Show alert with the selected place
-    Alert.alert(
-      "Lugar seleccionado",
-      `${data.description}\n\nLat: ${details?.geometry?.location?.lat}\nLng: ${details?.geometry?.location?.lng}`,
-      [{ text: "OK" }],
-    )
-  }
+  const googleApiKey = Constants.expoConfig?.extra?.googleApiKey
 
   const handleBackPress = () => {
     navigation.goBack()
@@ -72,16 +46,10 @@ export const CreateProject = () => {
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        {selectedLocation && (
-          <Marker
-            coordinate={{
-              latitude: selectedLocation.latitude,
-              longitude: selectedLocation.longitude,
-            }}
-            title={selectedLocation.title}
-            pinColor={colors.success}
-          />
-        )}
+        <Marker
+          coordinate={{ latitude: 19.432608, longitude: -99.133209 }}
+          pinColor={colors.success}
+        />
       </MapView>
 
       {/* Search container with back arrow and GooglePlacesAutocomplete */}
@@ -95,10 +63,14 @@ export const CreateProject = () => {
         />
         <View style={styles.autocompleteWrapper}>
           <GooglePlacesAutocomplete
+            predefinedPlaces={[]}
             placeholder="Buscar ubicación..."
-            onPress={handlePlaceSelect}
+            onPress={(data, details) => {
+              console.log("data", data)
+              console.log("details", details)
+            }}
             query={{
-              key: "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0",
+              key: googleApiKey,
               language: "es",
             }}
             fetchDetails={true}
@@ -179,7 +151,6 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   searchContainer: {
-    alignItems: "center",
     flexDirection: "row",
     left: 20,
     position: "absolute",
