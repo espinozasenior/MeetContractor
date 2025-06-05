@@ -1,9 +1,12 @@
-import { View, StyleSheet, StatusBar } from "react-native"
+import { View, StyleSheet, StatusBar, Text, ActivityIndicator } from "react-native"
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete"
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
+import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps"
 import { useNavigation } from "@react-navigation/native"
-import { Icon } from "@/components"
+import { Button, Icon } from "@/components"
+import { useLocation } from "@/hooks"
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5"
 import Constants from "expo-constants"
+import { useCallback, useRef, useState, useEffect } from "react"
 
 const colors = {
   background: "#f5f5f5",
@@ -23,11 +26,41 @@ const colors = {
 
 export const CreateProject = () => {
   const navigation = useNavigation()
+  const mapRef = useRef<MapView>(null)
   const googleApiKey = Constants.expoConfig?.extra?.googleApiKey
+  const { location, address, isLoading, reverseGeocode } = useLocation()
+  const [currentRegion, setCurrentRegion] = useState<Region | null>(null)
 
   const handleBackPress = () => {
     navigation.goBack()
   }
+
+  const handleRegionChangeComplete = useCallback(
+    async (region: Region) => {
+      setCurrentRegion(region)
+      // Reverse geocode the center coordinates
+      await reverseGeocode({
+        latitude: region.latitude,
+        longitude: region.longitude,
+      })
+    },
+    [reverseGeocode],
+  )
+
+  // Update map region when user location is available
+  useEffect(() => {
+    if (location && mapRef.current) {
+      const newRegion: Region = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }
+      setCurrentRegion(newRegion)
+      // Animate to user's location
+      mapRef.current.animateToRegion(newRegion, 1000)
+    }
+  }, [location])
 
   return (
     <View style={styles.container}>
@@ -35,27 +68,24 @@ export const CreateProject = () => {
 
       {/* MapView as background */}
       <MapView
+        ref={mapRef}
         style={styles.mapView}
         provider={PROVIDER_GOOGLE}
-        initialRegion={{
-          latitude: 19.432608, // Default to Mexico City
-          longitude: -99.133209,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
-        showsUserLocation={true}
-        showsMyLocationButton={true}
-      >
-        <Marker
-          coordinate={{ latitude: 19.432608, longitude: -99.133209 }}
-          pinColor={colors.success}
-        />
-      </MapView>
+        onRegionChangeComplete={handleRegionChangeComplete}
+        showsUserLocation
+        showsMyLocationButton={false}
+        mapType="standard"
+      />
+
+      {/* Center marker - fixed position */}
+      <View style={styles.centerMarker}>
+        <FontAwesome5 name="map-marker-alt" size={40} color={colors.success} />
+      </View>
 
       {/* Search container with back arrow and GooglePlacesAutocomplete */}
       <View style={styles.searchContainer}>
         <Icon
-          icon="back"
+          icon="x"
           size={24}
           color={colors.text}
           onPress={handleBackPress}
@@ -66,12 +96,19 @@ export const CreateProject = () => {
             predefinedPlaces={[]}
             placeholder="Buscar ubicación..."
             onPress={(data, details) => {
-              console.log("data", data)
-              console.log("details", details)
+              if (details?.geometry?.location) {
+                const newRegion = {
+                  latitude: details.geometry.location.lat,
+                  longitude: details.geometry.location.lng,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }
+                mapRef.current?.animateToRegion(newRegion, 1000)
+              }
             }}
             query={{
               key: googleApiKey,
-              language: "es",
+              language: "en",
             }}
             fetchDetails={true}
             enablePoweredByContainer={false}
@@ -93,13 +130,104 @@ export const CreateProject = () => {
             }}
             filterReverseGeocodingByTypes={["locality", "administrative_area_level_3"]}
           />
+          {/* Search icon positioned inside the input */}
+          <View style={styles.searchIconContainer}>
+            <FontAwesome5 name="search" size={16} color={colors.placeholder} />
+          </View>
         </View>
+      </View>
+
+      {/* Address card at the bottom */}
+      <View style={styles.addressCard}>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={colors.success} />
+            <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
+          </View>
+        ) : address ? (
+          <View style={styles.addressContainer}>
+            <Text style={styles.addressText}>{address.formattedAddress}</Text>
+            <Text
+              style={styles.addressDetails}
+            >{`${address.city}, ${address.region}, ${address.country} ${address.postalCode}`}</Text>
+            <Text style={styles.addressDetails}>
+              {currentRegion?.latitude.toFixed(6)}, {currentRegion?.longitude.toFixed(6)}
+            </Text>
+            <View style={styles.addressButtonContainer}>
+              <Button
+                text="Cancel"
+                preset="filled"
+                style={styles.addressButton}
+                onPress={() => {
+                  console.log("Seleccionar ubicación")
+                }}
+              />
+              <Button
+                text="Confirm"
+                preset="reversed"
+                style={styles.addressButton}
+                onPress={() => {
+                  console.log("Seleccionar ubicación")
+                }}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.noAddressContainer}>
+            <Icon icon="hidden" size={20} color={colors.textSecondary} />
+            <Text style={styles.noAddressText}>Mueve el mapa para seleccionar una ubicación</Text>
+          </View>
+        )}
       </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  addressButton: {
+    borderRadius: 15,
+    flex: 1,
+    marginTop: 15,
+  },
+  addressButtonContainer: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between",
+  },
+
+  addressCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    bottom: 20,
+    elevation: 5,
+    left: 20,
+    maxHeight: 150,
+    padding: 16,
+    position: "absolute",
+    right: 20,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+  },
+  addressContainer: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  addressDetails: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginTop: 2,
+  },
+  addressText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "600",
+    lineHeight: 20,
+  },
   autocompleteWrapper: {
     flex: 1,
     marginLeft: 10,
@@ -119,6 +247,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     width: 50,
+  },
+  centerMarker: {
+    alignItems: "center",
+    justifyContent: "center",
+    left: "50%",
+    marginLeft: -20,
+    marginTop: -40,
+    position: "absolute",
+    top: "50%",
+    zIndex: 1,
   },
   container: {
     backgroundColor: colors.background,
@@ -141,8 +279,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
   },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  loadingText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginLeft: 8,
+  },
   mapView: {
     flex: 1,
+  },
+  noAddressContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  noAddressText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginLeft: 8,
   },
   row: {
     backgroundColor: colors.white,
@@ -158,6 +314,15 @@ const styles = StyleSheet.create({
     top: 60, // Position below status bar
     zIndex: 1,
   },
+  searchIconContainer: {
+    alignItems: "center",
+    height: 50,
+    justifyContent: "center",
+    position: "absolute",
+    right: 15,
+    top: 0,
+    width: 30,
+  },
   textInput: {
     backgroundColor: colors.white,
     borderColor: colors.border,
@@ -167,6 +332,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: 50,
     paddingHorizontal: 15,
+    paddingRight: 45, // Add padding to make room for the search icon
     shadowColor: colors.shadow,
     shadowOffset: {
       width: 0,
