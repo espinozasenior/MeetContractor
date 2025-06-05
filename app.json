@@ -66,6 +66,12 @@
           "iosGoogleMapsApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0",
           "androidGoogleMapsApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
       ]
     ],
     "experiments": {
