@@ -4,6 +4,8 @@
  * Generally speaking, it will contain an auth flow (registration, login, forgot password)
  * and a "main" flow which the user will use once logged in.
  */
+// eslint-disable-next-line no-restricted-imports
+import * as React from "react"
 import { NavigationContainer, NavigatorScreenParams } from "@react-navigation/native"
 import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navigation/native-stack"
 import { observer } from "mobx-react-lite"
@@ -33,6 +35,24 @@ export type AppStackParamList = {
   Login: undefined
   Demo: NavigatorScreenParams<DemoTabParamList>
   Chat: undefined
+  CreateProject: undefined
+  CreateProjectForm: {
+    address?: {
+      street?: string
+      city?: string
+      region?: string
+      postalCode?: string
+      formattedAddress?: string
+      coordinates?: {
+        latitude?: number
+        longitude?: number
+      }
+    }
+  }
+  ProjectSuccess: {
+    projectName?: string
+    address?: string
+  }
 }
 
 /**
@@ -70,13 +90,16 @@ const AppStack = observer(function AppStack() {
       initialRouteName={isAuthenticated ? "Welcome" : "Login"}
     >
       {isAuthenticated ? (
-        <>
+        <React.Fragment>
           <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
 
           <Stack.Screen name="Demo" component={DemoNavigator} />
-          
+
           <Stack.Screen name="Chat" component={Screens.ChatScreen} />
-        </>
+          <Stack.Screen name="CreateProject" component={Screens.CreateProject} />
+          <Stack.Screen name="CreateProjectForm" component={Screens.CreateProjectForm} />
+          <Stack.Screen name="ProjectSuccess" component={Screens.ProjectSuccess} />
+        </React.Fragment>
       ) : (
         <>
           <Stack.Screen name="Login" component={Screens.LoginScreen} />

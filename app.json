@@ -24,7 +24,12 @@
         "foregroundImage": "./assets/images/app-icon-android-adaptive-foreground.png",
         "backgroundImage": "./assets/images/app-icon-android-adaptive-background.png"
       },
-      "allowBackup": false
+      "allowBackup": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
+        }
+      }
     },
     "ios": {
       "icon": "./assets/images/app-icon-ios.png",
@@ -32,6 +37,9 @@
       "bundleIdentifier": "com.nozasenior.meetcontractor",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
       }
     },
     "web": {
@@ -51,6 +59,19 @@
           "resizeMode": "contain",
           "backgroundColor": "#191015"
         }
+      ],
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0",
+          "androidGoogleMapsApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
       ]
     ],
     "experiments": {
@@ -59,7 +80,8 @@
     "extra": {
       "eas": {
         "projectId": "b7897685-75de-466a-b396-7fd1735ac40c"
-      }
+      },
+      "googleApiKey": "AIzaSyDNwCzfNFsRRBJA4BnnHU35B8SMlwwbwW0"
     }
   },
   "ignite": {

@@ -14,6 +14,19 @@
         "simulator": true
       }
     },
+    "sim": {
+      "distribution": "internal",
+      "developmentClient": true,
+      "ios": {
+        "buildConfiguration": "Debug",
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZXF1YWwtaGFkZG9jay02OC5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_API_URL": "https://staging-meet-contractor-back-sa3i.encr.app"
+      },
+      "channel": "sim"
+    },
     "development:device": {
       "extends": "development",
       "distribution": "internal",

@@ -1,18 +1,28 @@
 import { Link, RouteProp, useRoute } from "@react-navigation/native"
 import { FC, ReactElement, useCallback, useEffect, useRef, useState } from "react"
-import { Image, ImageStyle, Platform, SectionList, TextStyle, View, ViewStyle } from "react-native"
+import {
+  ActivityIndicator,
+  Image,
+  ImageStyle,
+  Platform,
+  SectionList,
+  TextStyle,
+  View,
+  ViewStyle,
+} from "react-native"
 import { Drawer } from "react-native-drawer-layout"
 import { type ContentStyle } from "@shopify/flash-list"
-import { ListItem, ListView, ListViewRef, Screen, Text } from "../../components"
+import { Button, ListItem, ListView, ListViewRef, Screen, Text } from "../../components"
 import { TxKeyPath, isRTL, translate } from "@/i18n"
 import { DemoTabParamList, DemoTabScreenProps } from "../../navigators/DemoNavigator"
 import type { Theme, ThemedStyle } from "@/theme"
-import { $styles } from "@/theme"
+import { $styles, colors } from "@/theme"
 import { useSafeAreaInsetsStyle } from "../../utils/useSafeAreaInsetsStyle"
 import * as Demos from "./demos"
 import { DrawerIconButton } from "./DrawerIconButton"
 import SectionListWithKeyboardAwareScrollView from "./SectionListWithKeyboardAwareScrollView"
 import { useAppTheme } from "@/utils/useAppTheme"
+import { useLocation } from "@/hooks/useLocation"
 
 const logo = require("../../../assets/images/logo.png")
 
@@ -93,7 +103,9 @@ const isAndroid = Platform.OS === "android"
 
 export const DemoShowroomScreen: FC<DemoTabScreenProps<"DemoShowroom">> =
   function DemoShowroomScreen(_props) {
+    const { navigation } = _props
     const [open, setOpen] = useState(false)
+    const { isLoading } = useLocation()
     const timeout = useRef<ReturnType<typeof setTimeout>>()
     const listRef = useRef<SectionList>(null)
     const menuRef = useRef<ListViewRef<DemoListItem["item"]>>(null)
@@ -167,6 +179,14 @@ export const DemoShowroomScreen: FC<DemoTabScreenProps<"DemoShowroom">> =
 
     const $drawerInsets = useSafeAreaInsetsStyle(["top"])
 
+    if (isLoading) {
+      return (
+        <View style={themed($loadingContainer)}>
+          <ActivityIndicator size="large" color={colors.tint} />
+        </View>
+      )
+    }
+
     return (
       <Drawer
         open={open}
@@ -223,6 +243,14 @@ export const DemoShowroomScreen: FC<DemoTabScreenProps<"DemoShowroom">> =
             ListHeaderComponent={
               <View style={themed($heading)}>
                 <Text preset="heading" tx="demoShowroomScreen:jumpStart" />
+                <Button
+                  preset="reversed"
+                  onPress={() => {
+                    navigation.navigate("CreateProject")
+                  }}
+                >
+                  Create Project
+                </Button>
               </View>
             }
             onScrollToIndexFailed={scrollToIndexFailed}
@@ -257,6 +285,7 @@ const $sectionListContentContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
 
 const $heading: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginBottom: spacing.xxxl,
+  gap: spacing.lg,
 })
 
 const $logoImage: ImageStyle = {
@@ -287,4 +316,11 @@ const $demoItemDescription: ThemedStyle<TextStyle> = ({ spacing }) => ({
 
 const $demoUseCasesSpacer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   paddingBottom: spacing.xxl,
+})
+
+const $loadingContainer: ThemedStyle<ViewStyle> = () => ({
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: colors.background,
 })
