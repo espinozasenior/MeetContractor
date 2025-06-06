@@ -17,6 +17,9 @@ import type {
   SendMessageRequest,
   SendMessageResponse,
   MessageAttachment,
+  CreateProjectRequest,
+  CreateProjectResponse,
+  Project,
 } from "./api.types"
 import type { EpisodeSnapshotIn } from "../../models/Episode"
 import type { IMessage } from "react-native-gifted-chat"
@@ -215,6 +218,49 @@ export class Api {
       }
 
       return { kind: "ok", message }
+    } catch (e) {
+      if (__DEV__ && e instanceof Error) {
+        console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)
+      }
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Creates a new project.
+   */
+  async createProject(
+    getToken: GetToken | undefined,
+    projectData: CreateProjectRequest,
+  ): Promise<{ kind: "ok"; project: Project } | GeneralApiProblem> {
+    // get the token from the clerk session
+    const token = await getToken?.()
+
+    // make the api call
+    const response: ApiResponse<CreateProjectResponse> = await this.apisauce.post(
+      "projects",
+      projectData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    // the typical ways to die when calling an api
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+
+    // transform the data into the format we are expecting
+    try {
+      const rawData = response.data
+
+      if (!rawData) {
+        return { kind: "bad-data" }
+      }
+
+      return { kind: "ok", project: rawData }
     } catch (e) {
       if (__DEV__ && e instanceof Error) {
         console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)

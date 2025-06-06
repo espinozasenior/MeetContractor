@@ -129,3 +129,44 @@ export interface ApiConfig {
    */
   timeout: number
 }
+
+/**
+ * Location coordinates
+ */
+export interface Location {
+  latitude: number
+  longitude: number
+}
+
+/**
+ * Request body for creating a new project
+ */
+export interface CreateProjectRequest {
+  name: string
+  description: string
+  addressLine1: string
+  addressLine2: string
+  city: string
+  state: string
+  postalCode: string
+  location: Location
+}
+
+/**
+ * Response interface for creating a project
+ */
+export interface CreateProjectResponse {
+  id: string
+  ownerId: string
+  name: string
+  description: string
+  addressLine1: string
+  addressLine2: string
+  city: string
+  state: string
+  postalCode: string
+  location: Location
+  status: string
+  createdAt: string
+  updatedAt: string
+}
