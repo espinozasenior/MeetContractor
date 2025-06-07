@@ -131,6 +131,7 @@ export const CreateProjectForm = () => {
         console.log("Project created:", result.project)
         // Navigate to success screen with project details
         navigation.navigate("ProjectSuccess", {
+          projectId: result.project.id,
           projectName: formData.projectName.trim(),
           address: `${formData.city}, ${formData.state} ${formData.postalCode}`,
         })

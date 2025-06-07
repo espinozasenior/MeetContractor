@@ -5,6 +5,8 @@ import { useHeader } from "@/utils/useHeader"
 import { useAppTheme } from "@/utils/useAppTheme"
 import { ThemedStyle } from "@/theme"
 import { AppStackParamList, AppStackScreenProps } from "@/navigators"
+import { useAuth } from "@clerk/clerk-expo"
+import { useFileUpload } from "@/hooks/useFileUpload"
 
 type ProjectSuccessRouteProp = RouteProp<AppStackParamList, "ProjectSuccess">
 
@@ -12,27 +14,31 @@ export const ProjectSuccess = () => {
   const navigation = useNavigation<AppStackScreenProps<"ProjectSuccess">["navigation"]>()
   const route = useRoute<ProjectSuccessRouteProp>()
   const { themed } = useAppTheme()
+  const { getToken } = useAuth()
 
   // Get project data from navigation params
-  const { projectName, address } = route.params || {}
+  const { projectId, projectName, address } = route.params || {}
 
-  const handleTakePhotos = () => {
-    // TODO: Navigate to photo capture screen
-    console.log("Take Photos pressed")
-  }
-
-  const handleUploadPhotos = () => {
-    // TODO: Navigate to photo upload screen
-    console.log("Upload Photos pressed")
-  }
+  // Use the file upload hook with all functionality
+  const { isUploading, handleTakePhotos, handleUploadPhotos } = useFileUpload({
+    projectId,
+    getToken,
+    onUploadSuccess: (message) => {
+      console.log("Upload success:", message)
+    },
+    onUploadError: (error) => {
+      console.error("Upload error:", error)
+    },
+  })
 
   const handleOpenProject = () => {
     // Navigate to Demo screen where the main app functionality is located
     navigation.navigate("Demo", { screen: "DemoShowroom", params: {} })
   }
+
   useHeader({
     rightText: "Done",
-    onRightPress: () => handleOpenProject(),
+    onRightPress: handleOpenProject,
   })
 
   return (
@@ -56,6 +62,7 @@ export const ProjectSuccess = () => {
           style={themed($takePhotosButton)}
           textStyle={themed($takePhotosButtonText)}
           onPress={handleTakePhotos}
+          disabled={isUploading}
         />
 
         <Button
@@ -64,6 +71,7 @@ export const ProjectSuccess = () => {
           style={themed($uploadPhotosButton)}
           textStyle={themed($uploadPhotosButtonText)}
           onPress={handleUploadPhotos}
+          disabled={isUploading}
         />
 
         <Button
