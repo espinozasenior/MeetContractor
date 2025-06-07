@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, ViewStyle, TextStyle } from "react-native"
-import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete"
+import { GooglePlacesAutocomplete, PlaceType } from "react-native-google-places-autocomplete"
 import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps"
 import { useNavigation } from "@react-navigation/native"
 import { Button, Icon } from "@/components"
@@ -123,6 +123,40 @@ export const CreateProject = () => {
                   longitudeDelta: 0.005,
                 }
                 mapRef.current?.animateToRegion(newRegion, 1000)
+
+                // Extract address information from Google Places API response
+                const addressComponents = details.address_components || []
+
+                // Helper function to get address component by type
+                const getAddressComponent = (types: PlaceType[]) => {
+                  const component = addressComponents.find((comp) =>
+                    types.some((type) => comp.types.includes(type)),
+                  )
+                  return component?.long_name || ""
+                }
+
+                // Extract address details
+                const street =
+                  getAddressComponent(["route"]) ||
+                  getAddressComponent(["street_number"]) + " " + getAddressComponent(["route"])
+                const city = getAddressComponent(["locality", "administrative_area_level_2"])
+                const region = getAddressComponent(["administrative_area_level_1"])
+                const postalCode = getAddressComponent(["postal_code"])
+
+                // Navigate to CreateProjectForm with the selected location data
+                navigation.navigate("CreateProjectForm", {
+                  address: {
+                    street: street.trim(),
+                    city: city,
+                    region: region,
+                    postalCode: postalCode,
+                    formattedAddress: details.formatted_address,
+                    coordinates: {
+                      latitude: details.geometry.location.lat,
+                      longitude: details.geometry.location.lng,
+                    },
+                  },
+                })
               }
             }}
             query={{
