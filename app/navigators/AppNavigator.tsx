@@ -50,6 +50,7 @@ export type AppStackParamList = {
     }
   }
   ProjectSuccess: {
+    projectId?: string
     projectName?: string
     address?: string
   }
