@@ -151,6 +151,15 @@ export interface CreateProjectRequest {
   postalCode: string
   location: Location
 }
+export interface Conversation {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  lastReadAt: string
+  lastMessageAt: string
+  visibility: string
+}
 
 /**
  * Response interface for creating a project
@@ -169,4 +178,5 @@ export interface CreateProjectResponse {
   status: string
   createdAt: string
   updatedAt: string
+  conversations: Conversation[]
 }

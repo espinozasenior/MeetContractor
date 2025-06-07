@@ -19,7 +19,6 @@ import type {
   MessageAttachment,
   CreateProjectRequest,
   CreateProjectResponse,
-  Project,
 } from "./api.types"
 import type { EpisodeSnapshotIn } from "../../models/Episode"
 import type { IMessage } from "react-native-gifted-chat"
@@ -232,7 +231,7 @@ export class Api {
   async createProject(
     getToken: GetToken | undefined,
     projectData: CreateProjectRequest,
-  ): Promise<{ kind: "ok"; project: Project } | GeneralApiProblem> {
+  ): Promise<{ kind: "ok"; project: CreateProjectResponse } | GeneralApiProblem> {
     // get the token from the clerk session
     const token = await getToken?.()
 
