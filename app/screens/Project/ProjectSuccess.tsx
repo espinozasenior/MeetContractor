@@ -1,14 +1,15 @@
 import { View, Text, ViewStyle, TextStyle, Image, ImageStyle } from "react-native"
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import { Button, Screen } from "@/components"
+import { useHeader } from "@/utils/useHeader"
 import { useAppTheme } from "@/utils/useAppTheme"
 import { ThemedStyle } from "@/theme"
-import { AppStackParamList } from "@/navigators"
+import { AppStackParamList, AppStackScreenProps } from "@/navigators"
 
 type ProjectSuccessRouteProp = RouteProp<AppStackParamList, "ProjectSuccess">
 
 export const ProjectSuccess = () => {
-  const navigation = useNavigation()
+  const navigation = useNavigation<AppStackScreenProps<"ProjectSuccess">["navigation"]>()
   const route = useRoute<ProjectSuccessRouteProp>()
   const { themed } = useAppTheme()
 
@@ -26,16 +27,19 @@ export const ProjectSuccess = () => {
   }
 
   const handleOpenProject = () => {
-    navigation.navigate("Welcome" as never)
+    // Navigate to Demo screen where the main app functionality is located
+    navigation.navigate("Demo", { screen: "DemoShowroom", params: {} })
   }
+  useHeader({
+    rightText: "Done",
+    onRightPress: () => handleOpenProject(),
+  })
 
   return (
     <Screen preset="fixed" safeAreaEdges={["top"]} contentContainerStyle={themed($container)}>
-      <Text style={themed($doneText)}>Done</Text>
-
       {/* Success Icon */}
       <View style={themed($iconContainer)}>
-        <Image source={require("../../assets/images/download-file.png")} style={themed($icon)} />
+        <Image source={require("../../../assets/images/download-file.png")} style={themed($icon)} />
       </View>
 
       {/* Project Details */}
@@ -81,15 +85,6 @@ const $container: ThemedStyle<ViewStyle> = ({ colors }) => ({
   paddingHorizontal: 24,
   justifyContent: "center",
   alignItems: "center",
-})
-
-const $doneText: ThemedStyle<TextStyle> = ({ colors }) => ({
-  position: "absolute",
-  top: 60,
-  right: 24,
-  color: colors.tint,
-  fontSize: 16,
-  fontWeight: "500",
 })
 
 const $iconContainer: ThemedStyle<ViewStyle> = () => ({
