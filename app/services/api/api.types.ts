@@ -180,3 +180,54 @@ export interface CreateProjectResponse {
   updatedAt: string
   conversations: Conversation[]
 }
+
+/**
+ * Upload file data structure
+ */
+export interface UploadFileData {
+  uri: string
+  type: string
+  name: string
+}
+
+/**
+ * Request body for uploading a single file
+ */
+export interface UploadFileRequest {
+  file: UploadFileData
+  projectId: string
+  uploadedAt: string
+}
+
+/**
+ * Request body for uploading multiple files
+ */
+export interface UploadMultipleFilesRequest {
+  files: UploadFileData[]
+  projectId: string
+  uploadedAt: string
+}
+
+/**
+ * Response interface for file upload
+ */
+export interface UploadResponse {
+  id: string
+  projectId: string
+  fileName: string
+  originalName: string
+  mimeType: string
+  size: number
+  url: string
+  uploadedAt: string
+}
+
+/**
+ * Response interface for multiple file upload
+ */
+export interface UploadMultipleResponse {
+  files: UploadResponse[]
+  totalFiles: number
+  successCount: number
+  failedCount: number
+}

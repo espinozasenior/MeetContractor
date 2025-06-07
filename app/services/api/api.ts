@@ -19,6 +19,9 @@ import type {
   MessageAttachment,
   CreateProjectRequest,
   CreateProjectResponse,
+  UploadFileData,
+  UploadResponse,
+  UploadMultipleResponse,
 } from "./api.types"
 import type { EpisodeSnapshotIn } from "../../models/Episode"
 import type { IMessage } from "react-native-gifted-chat"
@@ -260,6 +263,123 @@ export class Api {
       }
 
       return { kind: "ok", project: rawData }
+    } catch (e) {
+      if (__DEV__ && e instanceof Error) {
+        console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)
+      }
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Uploads a single file to a project.
+   */
+  async uploadFile(
+    getToken: GetToken | undefined,
+    projectId: string,
+    fileData: UploadFileData,
+  ): Promise<{ kind: "ok"; file: UploadResponse } | GeneralApiProblem> {
+    // get the token from the clerk session
+    const token = await getToken?.()
+
+    // Create FormData for multipart/form-data request
+    const formData = new FormData()
+    formData.append("file", {
+      uri: fileData.uri,
+      type: fileData.type,
+      name: fileData.name,
+    } as any)
+    formData.append("projectId", projectId)
+    formData.append("uploadedAt", new Date().toISOString())
+
+    // make the api call
+    const response: ApiResponse<UploadResponse> = await this.apisauce.post(
+      `upload/${projectId}`,
+      formData,
+      {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    )
+
+    // the typical ways to die when calling an api
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+
+    // transform the data into the format we are expecting
+    try {
+      const rawData = response.data
+
+      if (!rawData) {
+        return { kind: "bad-data" }
+      }
+
+      return { kind: "ok", file: rawData }
+    } catch (e) {
+      if (__DEV__ && e instanceof Error) {
+        console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)
+      }
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Uploads multiple files to a project.
+   */
+  async uploadMultipleFiles(
+    getToken: GetToken | undefined,
+    projectId: string,
+    filesData: UploadFileData[],
+  ): Promise<{ kind: "ok"; response: UploadMultipleResponse } | GeneralApiProblem> {
+    // get the token from the clerk session
+    const token = await getToken?.()
+
+    // Create FormData for multipart/form-data request
+    const formData = new FormData()
+
+    // Add multiple files to form data
+    filesData.forEach((fileData) => {
+      formData.append("files", {
+        uri: fileData.uri,
+        type: fileData.type,
+        name: fileData.name,
+      } as any)
+    })
+
+    formData.append("projectId", projectId)
+    formData.append("uploadedAt", new Date().toISOString())
+
+    // make the api call
+    const response: ApiResponse<UploadMultipleResponse> = await this.apisauce.post(
+      `upload-multiple/${projectId}`,
+      formData,
+      {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    )
+
+    // the typical ways to die when calling an api
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+
+    // transform the data into the format we are expecting
+    try {
+      const rawData = response.data
+
+      if (!rawData) {
+        return { kind: "bad-data" }
+      }
+
+      return { kind: "ok", response: rawData }
     } catch (e) {
       if (__DEV__ && e instanceof Error) {
         console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)
