@@ -2,6 +2,7 @@
   "name": "MeetContractor",
   "displayName": "MeetContractor",
   "expo": {
+    "owner": "automata_ai",
     "name": "MeetContractor",
     "slug": "MeetContractor",
     "scheme": "meetcontractor",
