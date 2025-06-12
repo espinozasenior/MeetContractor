@@ -15,7 +15,8 @@ import { useStores } from "../models"
 import { DemoNavigator, DemoTabParamList } from "./DemoNavigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { useAppTheme, useThemeProvider } from "@/utils/useAppTheme"
-import { ComponentProps } from "react"
+import { ComponentProps, useEffect, useState } from "react"
+import { useAuth } from "@clerk/clerk-expo"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -73,11 +74,42 @@ const Stack = createNativeStackNavigator<AppStackParamList>()
 const AppStack = observer(function AppStack() {
   const {
     authenticationStore: { isAuthenticated },
+    projectStore: { hasProjects, fetchProjects },
   } = useStores()
+  const { getToken } = useAuth()
+  const [isProjectsChecked, setIsProjectsChecked] = useState(false)
 
   const {
     theme: { colors },
   } = useAppTheme()
+
+  // Check for projects when authenticated
+  useEffect(() => {
+    const checkProjects = async () => {
+      if (isAuthenticated && !isProjectsChecked) {
+        try {
+          await fetchProjects(getToken)
+        } catch (error) {
+          console.error("Error checking projects:", error)
+        } finally {
+          setIsProjectsChecked(true)
+        }
+      }
+    }
+
+    checkProjects()
+  }, [isAuthenticated, fetchProjects, getToken, isProjectsChecked])
+
+  // Show loading while checking projects
+  if (isAuthenticated && !isProjectsChecked) {
+    return <Screens.LoadingScreen />
+  }
+
+  // Determine initial route based on projects
+  const getInitialRoute = () => {
+    if (!isAuthenticated) return "Login"
+    return hasProjects ? "Demo" : "Welcome"
+  }
 
   return (
     <Stack.Navigator
@@ -88,7 +120,7 @@ const AppStack = observer(function AppStack() {
           backgroundColor: colors.background,
         },
       }}
-      initialRouteName={isAuthenticated ? "Welcome" : "Login"}
+      initialRouteName={getInitialRoute()}
     >
       {isAuthenticated ? (
         <React.Fragment>
