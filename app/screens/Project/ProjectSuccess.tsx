@@ -50,8 +50,8 @@ export const ProjectSuccess = () => {
 
       {/* Project Details */}
       <View style={themed($detailsContainer)}>
-        <Text style={themed($projectTitle)}>{projectName || "C. Aro"}</Text>
-        <Text style={themed($projectAddress)}>{address || "Ciudad Guayana, Bolívar 8050"}</Text>
+        <Text style={themed($projectTitle)}>{projectName}</Text>
+        <Text style={themed($projectAddress)}>{address}</Text>
       </View>
 
       {/* Action Buttons */}
