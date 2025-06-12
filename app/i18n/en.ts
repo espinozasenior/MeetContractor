@@ -10,9 +10,9 @@ const en = {
   welcomeScreen: {
     postscript:
       "psst  — This probably isn't what your app looks like. (Unless your designer handed you these screens, and in that case, ship it!)",
-    readyForLaunch: "Your app, almost ready for launch!",
+    readyForLaunch: "Every photo, video, and organized \nby job location.",
     exciting: "(ohh, this is exciting!)",
-    letsGo: "Let's go!",
+    letsGo: "Start my first project",
     organizationHeading: "Every photo, video, and chat organized by job location.",
     projectName: "East High School",
     projectAddress: "3287 Elmwood Drive",
