@@ -422,7 +422,7 @@ export class Api {
       if (!rawData) {
         return { kind: "bad-data" }
       }
-
+      console.log("rawData", rawData)
       return { kind: "ok", projects: rawData }
     } catch (e) {
       if (__DEV__ && e instanceof Error) {
