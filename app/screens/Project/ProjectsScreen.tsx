@@ -1,0 +1,245 @@
+import { FC, useState } from "react"
+import {
+  Image,
+  ImageStyle,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+  TextStyle,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native"
+import { Screen, Text, EmptyState } from "../../components"
+import { DemoTabScreenProps } from "../../navigators/DemoNavigator"
+import type { ThemedStyle } from "@/theme"
+import { useHeader } from "@/utils/useHeader"
+import { colors } from "@/theme"
+import { useAppTheme } from "@/utils/useAppTheme"
+import { useProjects } from "@/hooks"
+import { Project } from "../../models/Project"
+
+type FilterStatus = "All" | "In progress" | "Closed"
+
+export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = function ProjectsScreen(
+  _props,
+) {
+  const { navigation } = _props
+  const { themed } = useAppTheme()
+  const [selectedFilter, setSelectedFilter] = useState<FilterStatus>("All")
+  const { projects, isLoading, error, refreshProjects, getProjectsByStatus } = useProjects()
+
+  const filteredProjects = getProjectsByStatus(selectedFilter)
+
+  useHeader({
+    title: "Projects",
+    rightText: "Create",
+    safeAreaEdges: ["top"],
+    rightIcon: "plus",
+    rightIconColor: colors.error,
+    rightTxOptions: {
+      color: colors.palette.primary400,
+    },
+    onRightPress: () => navigation.navigate("CreateProject"),
+  })
+
+  const renderProjectCard = ({ item }: { item: Project }) => (
+    <View style={themed($cardContainer)}>
+      <View style={themed($cardImageContainer)}>
+        <Image source={require("../../../assets/images/project-example.jpg")} style={$cardImage} />
+        <View style={themed($statusBadge)}>
+          <Text style={themed($statusText)}>{item.status}</Text>
+        </View>
+      </View>
+      <View style={themed($cardContent)}>
+        <Text style={themed($cardTitle)}>{item.description || "No description"}</Text>
+        <Text style={themed($projectName)}>{item.name}</Text>
+        <Text style={themed($address)}>{item.fullAddress}</Text>
+      </View>
+    </View>
+  )
+
+  const renderFilterTab = (status: FilterStatus) => (
+    <TouchableOpacity
+      key={status}
+      style={themed([$filterTab, selectedFilter === status && $filterTabActive])}
+      onPress={() => setSelectedFilter(status)}
+    >
+      <Text style={themed([$filterTabText, selectedFilter === status && $filterTabTextActive])}>
+        {status}
+      </Text>
+    </TouchableOpacity>
+  )
+
+  if (isLoading && filteredProjects.length === 0) {
+    return (
+      <Screen preset="fixed" contentContainerStyle={themed($loadingContainer)}>
+        <ActivityIndicator size="large" color={colors.tint} />
+      </Screen>
+    )
+  }
+
+  return (
+    <Screen preset="fixed" contentContainerStyle={themed($container)}>
+      {/* Filter Tabs */}
+      <View style={themed($filterContainer)}>
+        {(["All", "In progress", "Closed"] as FilterStatus[]).map(renderFilterTab)}
+      </View>
+
+      {/* Projects List */}
+      {filteredProjects.length === 0 && !isLoading ? (
+        <EmptyState
+          preset="generic"
+          heading="No projects found"
+          content="Create your first project to get started"
+          button="Create Project"
+          buttonOnPress={() => navigation.navigate("CreateProject")}
+        />
+      ) : (
+        <FlatList
+          data={projects}
+          renderItem={renderProjectCard}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={themed($listContainer)}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refreshProjects}
+              tintColor={colors.tint}
+            />
+          }
+        />
+      )}
+
+      {error && (
+        <View style={themed($errorContainer)}>
+          <Text style={themed($errorText)}>Error: {error}</Text>
+        </View>
+      )}
+    </Screen>
+  )
+}
+
+const $container: ThemedStyle<ViewStyle> = ({ colors }) => ({
+  flex: 1,
+  backgroundColor: colors.background,
+})
+
+const $filterContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  flexDirection: "row",
+  marginBottom: spacing.md,
+  gap: spacing.sm,
+  paddingHorizontal: spacing.lg,
+})
+
+const $filterTab: ThemedStyle<ViewStyle> = ({ colors, spacing }) => ({
+  paddingHorizontal: spacing.sm,
+  paddingVertical: spacing.xs,
+  borderRadius: 20,
+  backgroundColor: colors.palette.neutral100,
+})
+
+const $filterTabActive: ThemedStyle<ViewStyle> = ({ colors }) => ({
+  backgroundColor: colors.tint,
+})
+
+const $filterTabText: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
+  fontSize: 14,
+  fontFamily: typography.primary.medium,
+  color: colors.textDim,
+})
+
+const $filterTabTextActive: ThemedStyle<TextStyle> = ({ colors }) => ({
+  color: colors.background,
+})
+
+const $listContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  paddingHorizontal: spacing.md,
+  paddingBottom: spacing.xl,
+})
+
+const $cardContainer: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
+  backgroundColor: colors.background,
+  borderRadius: 12,
+  marginHorizontal: spacing.xs,
+  marginBottom: spacing.lg,
+  shadowColor: colors.palette.neutral800,
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+})
+
+const $cardImageContainer: ThemedStyle<ViewStyle> = () => ({
+  position: "relative",
+})
+
+const $cardImage: ImageStyle = {
+  width: "100%",
+  height: 200,
+  borderTopLeftRadius: 12,
+  borderTopRightRadius: 12,
+}
+
+const $statusBadge: ThemedStyle<ViewStyle> = ({ colors, spacing }) => ({
+  position: "absolute",
+  top: spacing.sm,
+  left: spacing.sm,
+  backgroundColor: colors.background,
+  paddingHorizontal: spacing.sm,
+  paddingVertical: spacing.xxs,
+  borderRadius: 12,
+})
+
+const $statusText: ThemedStyle<TextStyle> = ({ typography, colors }) => ({
+  fontSize: 12,
+  fontFamily: typography.primary.medium,
+  color: colors.text,
+})
+
+const $cardContent: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  padding: spacing.md,
+})
+
+const $cardTitle: ThemedStyle<TextStyle> = ({ typography, colors, spacing }) => ({
+  fontSize: 16,
+  fontFamily: typography.primary.semiBold,
+  color: colors.text,
+  marginBottom: spacing.xs,
+  lineHeight: 22,
+})
+
+const $projectName: ThemedStyle<TextStyle> = ({ typography, colors, spacing }) => ({
+  fontSize: 18,
+  fontFamily: typography.primary.bold,
+  color: colors.text,
+  marginBottom: spacing.xxs,
+})
+
+const $address: ThemedStyle<TextStyle> = ({ typography, colors }) => ({
+  fontSize: 14,
+  fontFamily: typography.primary.normal,
+  color: colors.textDim,
+  lineHeight: 20,
+})
+
+const $loadingContainer: ThemedStyle<ViewStyle> = ({ colors }) => ({
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: colors.background,
+})
+
+const $errorContainer: ThemedStyle<ViewStyle> = ({ colors, spacing }) => ({
+  backgroundColor: colors.errorBackground,
+  padding: spacing.md,
+  margin: spacing.lg,
+  borderRadius: 8,
+})
+
+const $errorText: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
+  color: colors.error,
+  fontSize: 14,
+  fontFamily: typography.primary.medium,
+})
