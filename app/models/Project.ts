@@ -41,6 +41,7 @@ export const ProjectModel = types
     createdAt: types.string,
     updatedAt: types.string,
     conversations: types.array(ConversationModel),
+    images: types.array(types.string),
   })
   .actions((self) => ({
     updateName(name: string) {

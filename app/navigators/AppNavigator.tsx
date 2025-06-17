@@ -82,7 +82,7 @@ const AppStack = observer(function AppStack() {
   const {
     theme: { colors },
   } = useAppTheme()
-
+  console.log("hasProjects", hasProjects)
   // Check for projects when authenticated
   useEffect(() => {
     const checkProjects = async () => {

@@ -23,7 +23,6 @@ import { DrawerIconButton } from "./DrawerIconButton"
 import SectionListWithKeyboardAwareScrollView from "./SectionListWithKeyboardAwareScrollView"
 import { useAppTheme } from "@/utils/useAppTheme"
 import { useLocation } from "@/hooks/useLocation"
-import { Home2 } from "iconsax-react-nativejs"
 
 const logo = require("../../../assets/images/logo.png")
 
@@ -252,7 +251,6 @@ export const DemoShowroomScreen: FC<DemoTabScreenProps<"DemoShowroom">> =
                 >
                   Create Project
                 </Button>
-                <Home2 color="red" size={30} variant="Bold" />
               </View>
             }
             onScrollToIndexFailed={scrollToIndexFailed}
