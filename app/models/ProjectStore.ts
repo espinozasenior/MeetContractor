@@ -16,22 +16,36 @@ export const ProjectStoreModel = types
   })
   .actions(withSetPropAction)
   .actions((self) => ({
-    async fetchProjects(getToken: GetToken | undefined) {
+    async fetchProjects(getToken: GetToken | undefined, status?: "active" | "closed") {
+      console.log("🚀 ProjectStore: fetchProjects iniciado", { status, hasGetToken: !!getToken })
       self.setProp("isLoading", true)
       self.setProp("error", null)
 
       try {
-        const response = await api.getProjects(getToken)
+        // Verificar que getToken esté disponible
+        if (!getToken) {
+          console.error("❌ ProjectStore: getToken no está disponible")
+          throw new Error("Authentication token not available")
+        }
+
+        console.log("📡 ProjectStore: Llamando a api.getProjects...")
+        const response = await api.getProjects(getToken, status)
+        console.log("📡 ProjectStore: Respuesta recibida", { kind: response.kind })
+
         if (response.kind === "ok") {
-          self.setProp("projects", response.projects.projects)
+          const projectsData = response.projects.projects
+          console.log(`✅ ProjectStore: ${projectsData?.length || 0} proyectos obtenidos`)
+          self.setProp("projects", projectsData)
         } else {
+          console.error("❌ ProjectStore: Error en respuesta de API", response)
           self.setProp("error", "Failed to fetch projects")
-          console.error(`Error fetching projects: ${JSON.stringify(response)}`)
         }
       } catch (error) {
-        self.setProp("error", error instanceof Error ? error.message : "Unknown error")
-        console.error("Error fetching projects:", error)
+        const errorMessage = error instanceof Error ? error.message : "Unknown error"
+        console.error("❌ ProjectStore: Error en fetchProjects:", error)
+        self.setProp("error", errorMessage)
       } finally {
+        console.log("🏁 ProjectStore: fetchProjects finalizado, estableciendo isLoading = false")
         self.setProp("isLoading", false)
       }
     },
