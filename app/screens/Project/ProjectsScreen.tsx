@@ -11,8 +11,6 @@ import {
   RefreshControl,
   Dimensions,
 } from "react-native"
-
-const { width: screenWidth } = Dimensions.get("window")
 import { Screen, Text, EmptyState } from "../../components"
 import { DemoTabScreenProps } from "../../navigators/DemoNavigator"
 import type { ThemedStyle } from "@/theme"
@@ -22,10 +20,12 @@ import { useAppTheme } from "@/utils/useAppTheme"
 import { useProjects } from "@/hooks"
 import { Project } from "../../models/Project"
 
+const { width: screenWidth } = Dimensions.get("window")
+
 enum FilterStatus {
   All = "All",
-  InProgress = "In progress",
-  Closed = "Closed",
+  Active = "active",
+  Closed = "closed",
 }
 
 export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = function ProjectsScreen(
@@ -34,10 +34,10 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = function P
   const { navigation } = _props
   const { themed } = useAppTheme()
   const [selectedFilter, setSelectedFilter] = useState<FilterStatus>(FilterStatus.All)
-  const { projects, isLoading, error, refreshProjects, getProjectsByStatus } = useProjects()
-  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const { projects, isLoading, error, refreshProjects, fetchProjects } = useProjects()
+  const [activeImageIndexes, setActiveImageIndexes] = useState<Record<string, number>>({})
   const flatListRef = useRef<FlatList>(null)
-  const filteredProjects = getProjectsByStatus(selectedFilter)
+  console.log("isLoading", isLoading)
 
   useHeader({
     title: "Projects",
@@ -54,30 +54,50 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = function P
   const renderImage = ({ item: imageUrl }: { item: string }) => {
     const cardWidth = screenWidth - 48 // Accounting for padding
     return (
-      <Image
-        source={{ uri: imageUrl }}
-        style={[$cardImage, { width: cardWidth }]}
-        resizeMode="cover"
-        onLoad={() => console.log("Image loaded successfully:", imageUrl)}
-        onError={(error) =>
-          console.log("Image load error:", error.nativeEvent.error, "for URL:", imageUrl)
-        }
-        onLoadStart={() => console.log("Image load started:", imageUrl)}
-      />
+      <View style={themed({ ...$imageWrapper, width: cardWidth })}>
+        <Image
+          source={{ uri: imageUrl }}
+          style={[$cardImage, { width: cardWidth }]}
+          resizeMode="cover"
+          onLoad={() => console.log("Image loaded successfully:", imageUrl)}
+          onError={(error) =>
+            console.log("Image load error:", error.nativeEvent.error, "for URL:", imageUrl)
+          }
+          onLoadStart={() => console.log("Image load started:", imageUrl)}
+        />
+      </View>
     )
   }
 
   const renderProjectCard = ({ item }: { item: Project }) => {
-    const renderPaginationDots = () => (
-      <View style={themed($paginationContainer)}>
-        {item.images.map((_, index) => (
-          <View
-            key={index}
-            style={themed([$paginationDot, index === activeImageIndex && $paginationDotActive])}
-          />
-        ))}
-      </View>
-    )
+    const currentActiveIndex = activeImageIndexes[item.id] || 0
+
+    const renderPaginationDots = () => {
+      // Obtener las imágenes (reales o de demostración)
+      const imagesList =
+        item.images.length > 0
+          ? item.images
+          : [
+              "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+              "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+              "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            ]
+
+      return (
+        <View style={themed($paginationContainer)}>
+          {imagesList.length > 1 &&
+            imagesList.map((_, index) => (
+              <View
+                key={index}
+                style={themed([
+                  $paginationDot,
+                  index === currentActiveIndex && $paginationDotActive,
+                ])}
+              />
+            ))}
+        </View>
+      )
+    }
 
     return (
       <View style={themed($cardContainer)}>
@@ -100,7 +120,7 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = function P
             keyExtractor={(item, index) => index.toString()}
             onMomentumScrollEnd={(event) => {
               const newIndex = Math.round(event.nativeEvent.contentOffset.x / (screenWidth - 48))
-              setActiveImageIndex(newIndex)
+              setActiveImageIndexes((prev) => ({ ...prev, [item.id]: newIndex }))
             }}
           />
           {renderPaginationDots()}
@@ -121,7 +141,14 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = function P
     <TouchableOpacity
       key={status}
       style={themed([$filterTab, selectedFilter === status && $filterTabActive])}
-      onPress={() => setSelectedFilter(FilterStatus.All)} // TODO: Cambiar a status
+      onPress={() => {
+        setSelectedFilter(status)
+        if (status === FilterStatus.All) {
+          fetchProjects()
+        } else {
+          fetchProjects(status)
+        }
+      }}
     >
       <Text style={themed([$filterTabText, selectedFilter === status && $filterTabTextActive])}>
         {status}
@@ -141,17 +168,20 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = function P
     <Screen preset="fixed" contentContainerStyle={themed($container)}>
       {/* Filter Tabs */}
       <View style={themed($filterContainer)}>
-        {["All", "In progress", "Closed"].map((status) => renderFilterTab(status as FilterStatus))}
+        {[FilterStatus.All, FilterStatus.Active, FilterStatus.Closed].map((status) =>
+          renderFilterTab(status),
+        )}
       </View>
 
       {/* Projects List */}
-      {filteredProjects.length === 0 && !isLoading ? (
+      {projects.length === 0 && !isLoading ? (
         <EmptyState
           preset="generic"
           heading="No projects found"
           content="Create your first project to get started"
           button="Create Project"
           buttonOnPress={() => navigation.navigate("CreateProject")}
+          style={themed({ flex: 1, padding: 16 })}
         />
       ) : (
         <FlatList
@@ -231,10 +261,15 @@ const $cardContainer: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
 
 const $cardImageContainer: ThemedStyle<ViewStyle> = () => ({
   position: "relative",
-  overflow: "hidden",
   borderTopLeftRadius: 12,
   borderTopRightRadius: 12,
 })
+
+const $imageWrapper: ViewStyle = {
+  overflow: "hidden",
+  borderTopLeftRadius: 12,
+  borderTopRightRadius: 12,
+}
 
 const $cardImage: ImageStyle = {
   height: 200,
@@ -305,24 +340,33 @@ const $errorText: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
 
 const $paginationContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   position: "absolute",
-  bottom: spacing.sm,
+  bottom: spacing.md,
   left: 0,
   right: 0,
   flexDirection: "row",
   justifyContent: "center",
   alignItems: "center",
   gap: spacing.xs,
+  zIndex: 10,
+  paddingVertical: spacing.xs,
 })
 
 const $paginationDot: ThemedStyle<ViewStyle> = ({ colors }) => ({
-  width: 8,
-  height: 8,
-  borderRadius: 4,
-  backgroundColor: colors.palette.neutral100,
-  opacity: 0.5,
+  width: 10,
+  height: 10,
+  borderRadius: 5,
+  backgroundColor: colors.palette.neutral400,
+  opacity: 0.7,
+  shadowColor: colors.palette.neutral900,
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.3,
+  shadowRadius: 2,
+  elevation: 3,
 })
 
 const $paginationDotActive: ThemedStyle<ViewStyle> = ({ colors }) => ({
   backgroundColor: colors.background,
   opacity: 1,
+  transform: [{ scale: 1.2 }],
+  shadowOpacity: 0.5,
 })
