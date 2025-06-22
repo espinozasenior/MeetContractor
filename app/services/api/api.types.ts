@@ -256,7 +256,7 @@ export interface ProjectResponse {
     latitude: number
     longitude: number
   } | null
-  status: string
+  status: "active" | "closed"
   createdAt: string
   updatedAt: string
   conversations: ConversationResponse[]

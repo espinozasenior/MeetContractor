@@ -394,14 +394,18 @@ export class Api {
    */
   async getProjects(
     getToken: GetToken | undefined,
+    status?: "active" | "closed",
   ): Promise<{ kind: "ok"; projects: GetProjectsResponse } | GeneralApiProblem> {
     // get the token from the clerk session
     const token = await getToken?.()
 
+    // Prepare query parameters - only add status if provided
+    const queryParams = status ? { status } : {}
+
     // make the api call
     const response: ApiResponse<GetProjectsResponse> = await this.apisauce.get(
       "projects",
-      {},
+      queryParams,
       {
         headers: {
           Authorization: `Bearer ${token}`,
