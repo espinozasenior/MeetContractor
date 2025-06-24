@@ -55,6 +55,7 @@
     "expo-system-ui": "~5.0.7",
     "expo-web-browser": "~14.1.6",
     "i18next": "^23.14.0",
+    "iconsax-react-nativejs": "^0.0.8",
     "intl-pluralrules": "^2.0.1",
     "mobx": "6.10.2",
     "mobx-react-lite": "4.0.5",
@@ -74,6 +75,7 @@
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
+    "react-native-svg": "^15.12.0",
     "react-native-web": "~0.20.0"
   },
   "devDependencies": {

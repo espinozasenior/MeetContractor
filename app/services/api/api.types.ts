@@ -231,3 +231,46 @@ export interface UploadMultipleResponse {
   successCount: number
   failedCount: number
 }
+
+/**
+ * Response interface for getting all projects
+ */
+export interface GetProjectsResponse {
+  projects: ProjectResponse[]
+}
+
+/**
+ * Individual project in the response
+ */
+export interface ProjectResponse {
+  id: string
+  ownerId: string
+  name: string
+  description: string | null
+  addressLine1: string
+  addressLine2: string | null
+  city: string
+  state: string
+  postalCode: string
+  location: {
+    latitude: number
+    longitude: number
+  } | null
+  status: "active" | "closed"
+  createdAt: string
+  updatedAt: string
+  conversations: ConversationResponse[]
+}
+
+/**
+ * Individual conversation in a project
+ */
+export interface ConversationResponse {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  lastReadAt: string | null
+  lastMessageAt: string | null
+  visibility: string
+}

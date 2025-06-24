@@ -22,6 +22,7 @@ import type {
   UploadFileData,
   UploadResponse,
   UploadMultipleResponse,
+  GetProjectsResponse,
 } from "./api.types"
 import type { EpisodeSnapshotIn } from "../../models/Episode"
 import type { IMessage } from "react-native-gifted-chat"
@@ -380,6 +381,53 @@ export class Api {
       }
 
       return { kind: "ok", response: rawData }
+    } catch (e) {
+      if (__DEV__ && e instanceof Error) {
+        console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)
+      }
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Gets all projects for the authenticated user.
+   */
+  async getProjects(
+    getToken: GetToken | undefined,
+    status?: "active" | "closed",
+  ): Promise<{ kind: "ok"; projects: GetProjectsResponse } | GeneralApiProblem> {
+    // get the token from the clerk session
+    const token = await getToken?.()
+
+    // Prepare query parameters - only add status if provided
+    const queryParams = status ? { status } : {}
+
+    // make the api call
+    const response: ApiResponse<GetProjectsResponse> = await this.apisauce.get(
+      "projects",
+      queryParams,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    // the typical ways to die when calling an api
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+
+    // transform the data into the format we are expecting
+    try {
+      const rawData = response.data
+
+      if (!rawData) {
+        return { kind: "bad-data" }
+      }
+      console.log("rawData", rawData)
+      return { kind: "ok", projects: rawData }
     } catch (e) {
       if (__DEV__ && e instanceof Error) {
         console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)

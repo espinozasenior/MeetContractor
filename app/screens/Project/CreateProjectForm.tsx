@@ -1,15 +1,5 @@
 import { useState } from "react"
-import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  ViewStyle,
-  TextStyle,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from "react-native"
+import { View, Text, TextInput, ScrollView, ViewStyle, TextStyle, Alert } from "react-native"
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import { useAuth } from "@clerk/clerk-expo"
 import { Button, Screen } from "@/components"
@@ -176,80 +166,75 @@ export const CreateProjectForm = () => {
 
   return (
     <Screen preset="scroll" safeAreaEdges={["top"]} contentContainerStyle={themed($container)}>
-      <KeyboardAvoidingView
-        style={themed($keyboardContainer)}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <ScrollView
+        style={themed($scrollView)}
+        contentContainerStyle={themed($scrollContent)}
+        showsVerticalScrollIndicator={false}
       >
-        <ScrollView
-          style={themed($scrollView)}
-          contentContainerStyle={themed($scrollContent)}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Project Name */}
+        {/* Project Name */}
+        <FloatingLabelInput
+          label="Project name"
+          value={formData.projectName}
+          onChangeText={(value) => handleInputChange("projectName", value)}
+          placeholder="Project name"
+        />
+
+        {/* Address Line 1 */}
+        <FloatingLabelInput
+          label="Address Line 1"
+          value={formData.formattedAddress}
+          onChangeText={(value) => handleInputChange("addressLine1", value)}
+          placeholder="Address Line 1"
+        />
+
+        {/* Address Line 2 */}
+        <FloatingLabelInput
+          label="Address Line 2"
+          value={formData.addressLine2}
+          onChangeText={(value) => handleInputChange("addressLine2", value)}
+          placeholder="Address Line 2"
+        />
+
+        {/* City, State, Postal Code Row */}
+        <View style={themed($rowContainer)}>
           <FloatingLabelInput
-            label="Project name"
-            value={formData.projectName}
-            onChangeText={(value) => handleInputChange("projectName", value)}
-            placeholder="Project name"
+            label="City"
+            value={formData.city}
+            onChangeText={(value) => handleInputChange("city", value)}
+            placeholder="Ciudad Guayana"
+            containerStyle={themed($thirdColumnContainer)}
           />
 
-          {/* Address Line 1 */}
           <FloatingLabelInput
-            label="Address Line 1"
-            value={formData.formattedAddress}
-            onChangeText={(value) => handleInputChange("addressLine1", value)}
-            placeholder="Address Line 1"
+            label="State"
+            value={formData.state}
+            onChangeText={(value) => handleInputChange("state", value)}
+            placeholder="Bolívar"
+            containerStyle={themed($thirdColumnContainer)}
           />
 
-          {/* Address Line 2 */}
           <FloatingLabelInput
-            label="Address Line 2"
-            value={formData.addressLine2}
-            onChangeText={(value) => handleInputChange("addressLine2", value)}
-            placeholder="Address Line 2"
-          />
-
-          {/* City, State, Postal Code Row */}
-          <View style={themed($rowContainer)}>
-            <FloatingLabelInput
-              label="City"
-              value={formData.city}
-              onChangeText={(value) => handleInputChange("city", value)}
-              placeholder="Ciudad Guayana"
-              containerStyle={themed($thirdColumnContainer)}
-            />
-
-            <FloatingLabelInput
-              label="State"
-              value={formData.state}
-              onChangeText={(value) => handleInputChange("state", value)}
-              placeholder="Bolívar"
-              containerStyle={themed($thirdColumnContainer)}
-            />
-
-            <FloatingLabelInput
-              label="Postal Code"
-              value={formData.postalCode}
-              onChangeText={(value) => handleInputChange("postalCode", value)}
-              placeholder="8050"
-              keyboardType="numeric"
-              containerStyle={themed($thirdColumnContainer)}
-            />
-          </View>
-        </ScrollView>
-
-        {/* Bottom Create Button */}
-        <View style={themed($bottomButtonContainer)}>
-          <Button
-            text={isCreating ? "Creating..." : "Create"}
-            preset="filled"
-            style={themed($createButton)}
-            textStyle={themed($createButtonText)}
-            onPress={handleCreateProject}
-            disabled={!isFormValid() || isCreating}
+            label="Postal Code"
+            value={formData.postalCode}
+            onChangeText={(value) => handleInputChange("postalCode", value)}
+            placeholder="8050"
+            keyboardType="numeric"
+            containerStyle={themed($thirdColumnContainer)}
           />
         </View>
-      </KeyboardAvoidingView>
+      </ScrollView>
+
+      {/* Bottom Create Button */}
+      <View style={themed($bottomButtonContainer)}>
+        <Button
+          text={isCreating ? "Creating..." : "Create"}
+          preset="filled"
+          style={themed($createButton)}
+          textStyle={themed($createButtonText)}
+          onPress={handleCreateProject}
+          disabled={!isFormValid() || isCreating}
+        />
+      </View>
     </Screen>
   )
 }

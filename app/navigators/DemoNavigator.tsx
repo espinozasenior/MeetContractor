@@ -1,10 +1,9 @@
 import { BottomTabScreenProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { CompositeScreenProps } from "@react-navigation/native"
-import { TextStyle, View, ViewStyle } from "react-native"
+import { TextStyle, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "../components"
-import { translate } from "@/i18n"
-import { DemoCommunityScreen, DemoShowroomScreen, DemoDebugScreen, ChatScreen } from "../screens"
+import { ChatScreen, ProjectsScreen } from "../screens"
 import { DemoPodcastListScreen } from "../screens/DemoPodcastListScreen"
 import type { ThemedStyle } from "@/theme"
 import { AppStackParamList, AppStackScreenProps } from "./AppNavigator"
@@ -30,9 +29,6 @@ export type DemoTabScreenProps<T extends keyof DemoTabParamList> = CompositeScre
 
 const Tab = createBottomTabNavigator<DemoTabParamList>()
 
-// Placeholder component to satisfy type requirements
-const PlaceholderScreen = () => null
-
 /**
  * This is the main navigator for the demo screens with a bottom tab bar.
  * Each tab is a stack navigator with its own set of screens.
@@ -52,54 +48,24 @@ export function DemoNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,
-        tabBarStyle: themed([$tabBar, { height: bottom + 70 }]),
-        tabBarActiveTintColor: colors.text,
-        tabBarInactiveTintColor: colors.text,
+        tabBarStyle: themed([{ height: bottom + 60 }]),
+        tabBarActiveTintColor: colors.tint,
+        tabBarInactiveTintColor: colors.tintInactive,
         tabBarLabelStyle: themed($tabBarLabel),
         tabBarItemStyle: themed($tabBarItem),
       }}
     >
       <Tab.Screen
         name="DemoShowroom"
-        component={DemoShowroomScreen}
+        component={ProjectsScreen}
         options={{
-          tabBarLabel: translate("demoNavigator:componentsTab"),
+          tabBarLabel: "Projects",
           tabBarIcon: ({ focused }) => (
-            <Icon icon="components" color={focused ? colors.tint : colors.tintInactive} size={30} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="DemoCommunity"
-        component={DemoCommunityScreen}
-        options={{
-          tabBarLabel: translate("demoNavigator:communityTab"),
-          tabBarIcon: ({ focused }) => (
-            <Icon icon="community" color={focused ? colors.tint : colors.tintInactive} size={30} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="DemoPodcastList"
-        component={DemoPodcastListScreen}
-        options={{
-          tabBarAccessibilityLabel: translate("demoNavigator:podcastListTab"),
-          tabBarLabel: translate("demoNavigator:podcastListTab"),
-          tabBarIcon: ({ focused }) => (
-            <Icon icon="podcast" color={focused ? colors.tint : colors.tintInactive} size={30} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="DemoDebug"
-        component={DemoDebugScreen}
-        options={{
-          tabBarLabel: translate("demoNavigator:debugTab"),
-          tabBarIcon: ({ focused }) => (
-            <Icon icon="debug" color={focused ? colors.tint : colors.tintInactive} size={30} />
+            <Icon
+              icon={focused ? "home2" : "home"}
+              color={focused ? colors.tint : colors.tintInactive}
+              size={30}
+            />
           ),
         }}
       />
@@ -110,7 +76,11 @@ export function DemoNavigator() {
         options={{
           tabBarLabel: "Chat",
           tabBarIcon: ({ focused }) => (
-            <Icon icon="community" color={focused ? colors.tint : colors.tintInactive} size={30} />
+            <Icon
+              icon={focused ? "message2" : "message"}
+              color={focused ? colors.tint : colors.tintInactive}
+              size={30}
+            />
           ),
           tabBarAccessibilityLabel: "Chat",
           tabBarStyle: { display: "none" }, // Hide tab bar for this screen
@@ -124,22 +94,32 @@ export function DemoNavigator() {
           },
         })}
       />
+
+      <Tab.Screen
+        name="DemoPodcastList"
+        component={DemoPodcastListScreen}
+        options={{
+          tabBarAccessibilityLabel: "Profile",
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ focused }) => (
+            <Icon
+              icon={focused ? "userSquare2" : "userSquare"}
+              color={focused ? colors.tint : colors.tintInactive}
+              size={30}
+            />
+          ),
+        }}
+      />
     </Tab.Navigator>
   )
 }
-
-const $tabBar: ThemedStyle<ViewStyle> = ({ colors }) => ({
-  backgroundColor: colors.background,
-  borderTopColor: colors.transparent,
-})
 
 const $tabBarItem: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   paddingTop: spacing.md,
 })
 
-const $tabBarLabel: ThemedStyle<TextStyle> = ({ colors, typography }) => ({
+const $tabBarLabel: ThemedStyle<TextStyle> = ({ typography }) => ({
   fontSize: 12,
   fontFamily: typography.primary.medium,
   lineHeight: 16,
-  color: colors.text,
 })
