@@ -74,7 +74,7 @@ const Stack = createNativeStackNavigator<AppStackParamList>()
 const AppStack = observer(function AppStack() {
   const {
     authenticationStore: { isAuthenticated },
-    projectStore: { hasProjects, fetchProjects },
+    projectStore: { hasProjects, isLoading, fetchProjects },
   } = useStores()
   const { getToken } = useAuth()
   const [isProjectsChecked, setIsProjectsChecked] = useState(false)
@@ -101,7 +101,7 @@ const AppStack = observer(function AppStack() {
   }, [isAuthenticated, fetchProjects, getToken, isProjectsChecked])
 
   // Show loading while checking projects
-  if (isAuthenticated && !isProjectsChecked) {
+  if (isAuthenticated && isLoading && !isProjectsChecked) {
     return <Screens.LoadingScreen />
   }
 
