@@ -14,6 +14,7 @@ import {
 import { Screen, Text, EmptyState } from "../../components"
 import { DemoTabScreenProps } from "../../navigators/DemoNavigator"
 import type { ThemedStyle } from "@/theme"
+import { observer } from "mobx-react-lite"
 import { useHeader } from "@/utils/useHeader"
 import { colors } from "@/theme"
 import { useAppTheme } from "@/utils/useAppTheme"
@@ -28,186 +29,186 @@ enum FilterStatus {
   Closed = "closed",
 }
 
-export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = function ProjectsScreen(
-  _props,
-) {
-  const { navigation } = _props
-  const { themed } = useAppTheme()
-  const [selectedFilter, setSelectedFilter] = useState<FilterStatus>(FilterStatus.All)
-  const { projects, isLoading, error, refreshProjects, fetchProjects } = useProjects()
-  const [activeImageIndexes, setActiveImageIndexes] = useState<Record<string, number>>({})
-  const flatListRef = useRef<FlatList>(null)
-  console.log("isLoading", isLoading)
+export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
+  function ProjectsScreen(_props) {
+    const { navigation } = _props
+    const { themed } = useAppTheme()
+    const [selectedFilter, setSelectedFilter] = useState<FilterStatus>(FilterStatus.All)
+    const { projects, isLoading, error, refreshProjects, fetchProjects } = useProjects()
+    const [activeImageIndexes, setActiveImageIndexes] = useState<Record<string, number>>({})
+    const flatListRef = useRef<FlatList>(null)
+    console.log("isLoading", isLoading)
 
-  useHeader({
-    title: "Projects",
-    rightText: "Create",
-    safeAreaEdges: ["top"],
-    rightIcon: "plus",
-    rightIconColor: colors.error,
-    rightTxOptions: {
-      color: colors.palette.primary400,
-    },
-    onRightPress: () => navigation.navigate("CreateProject"),
-  })
+    useHeader({
+      title: "Projects",
+      rightText: "Create",
+      safeAreaEdges: ["top"],
+      rightIcon: "plus",
+      rightIconColor: colors.error,
+      rightTxOptions: {
+        color: colors.palette.primary400,
+      },
+      onRightPress: () => navigation.navigate("CreateProject"),
+    })
 
-  const renderImage = ({ item: imageUrl }: { item: string }) => {
-    const cardWidth = screenWidth - 48 // Accounting for padding
-    return (
-      <View style={themed({ ...$imageWrapper, width: cardWidth })}>
-        <Image
-          source={{ uri: imageUrl }}
-          style={[$cardImage, { width: cardWidth }]}
-          resizeMode="cover"
-          onLoad={() => console.log("Image loaded successfully:", imageUrl)}
-          onError={(error) =>
-            console.log("Image load error:", error.nativeEvent.error, "for URL:", imageUrl)
-          }
-          onLoadStart={() => console.log("Image load started:", imageUrl)}
-        />
-      </View>
-    )
-  }
-
-  const renderProjectCard = ({ item }: { item: Project }) => {
-    const currentActiveIndex = activeImageIndexes[item.id] || 0
-
-    const renderPaginationDots = () => {
-      // Obtener las imágenes (reales o de demostración)
-      const imagesList =
-        item.images.length > 0
-          ? item.images
-          : [
-              "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-              "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-              "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-            ]
-
+    const renderImage = ({ item: imageUrl }: { item: string }) => {
+      const cardWidth = screenWidth - 48 // Accounting for padding
       return (
-        <View style={themed($paginationContainer)}>
-          {imagesList.length > 1 &&
-            imagesList.map((_, index) => (
-              <View
-                key={index}
-                style={themed([
-                  $paginationDot,
-                  index === currentActiveIndex && $paginationDotActive,
-                ])}
-              />
-            ))}
+        <View style={themed({ ...$imageWrapper, width: cardWidth })}>
+          <Image
+            source={{ uri: imageUrl }}
+            style={[$cardImage, { width: cardWidth }]}
+            resizeMode="cover"
+            onLoad={() => console.log("Image loaded successfully:", imageUrl)}
+            onError={(error) =>
+              console.log("Image load error:", error.nativeEvent.error, "for URL:", imageUrl)
+            }
+            onLoadStart={() => console.log("Image load started:", imageUrl)}
+          />
         </View>
       )
     }
 
-    return (
-      <View style={themed($cardContainer)}>
-        <View style={themed($cardImageContainer)}>
-          <FlatList
-            ref={flatListRef}
-            data={
-              item.images.length > 0
-                ? item.images.map((img) => img.toString())
-                : [
-                    "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                    "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                    "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                  ]
-            }
-            renderItem={renderImage}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item, index) => index.toString()}
-            onMomentumScrollEnd={(event) => {
-              const newIndex = Math.round(event.nativeEvent.contentOffset.x / (screenWidth - 48))
-              setActiveImageIndexes((prev) => ({ ...prev, [item.id]: newIndex }))
-            }}
-          />
-          {renderPaginationDots()}
-          <View style={themed($statusBadge)}>
-            <Text style={themed($statusText)}>{item.status}</Text>
+    const renderProjectCard = ({ item }: { item: Project }) => {
+      const currentActiveIndex = activeImageIndexes[item.id] || 0
+
+      const renderPaginationDots = () => {
+        // Obtener las imágenes (reales o de demostración)
+        const imagesList =
+          item.images.length > 0
+            ? item.images
+            : [
+                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+              ]
+
+        return (
+          <View style={themed($paginationContainer)}>
+            {imagesList.length > 1 &&
+              imagesList.map((_, index) => (
+                <View
+                  key={index}
+                  style={themed([
+                    $paginationDot,
+                    index === currentActiveIndex && $paginationDotActive,
+                  ])}
+                />
+              ))}
+          </View>
+        )
+      }
+
+      return (
+        <View style={themed($cardContainer)}>
+          <View style={themed($cardImageContainer)}>
+            <FlatList
+              ref={flatListRef}
+              data={
+                item.images.length > 0
+                  ? item.images.map((img) => img.toString())
+                  : [
+                      "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                      "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                      "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                    ]
+              }
+              renderItem={renderImage}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()}
+              onMomentumScrollEnd={(event) => {
+                const newIndex = Math.round(event.nativeEvent.contentOffset.x / (screenWidth - 48))
+                setActiveImageIndexes((prev) => ({ ...prev, [item.id]: newIndex }))
+              }}
+            />
+            {renderPaginationDots()}
+            <View style={themed($statusBadge)}>
+              <Text style={themed($statusText)}>{item.status}</Text>
+            </View>
+          </View>
+          <View style={themed($cardContent)}>
+            <Text style={themed($cardTitle)}>{item.description || "No description"}</Text>
+            <Text style={themed($projectName)}>{item.name}</Text>
+            <Text style={themed($address)}>{item.fullAddress}</Text>
           </View>
         </View>
-        <View style={themed($cardContent)}>
-          <Text style={themed($cardTitle)}>{item.description || "No description"}</Text>
-          <Text style={themed($projectName)}>{item.name}</Text>
-          <Text style={themed($address)}>{item.fullAddress}</Text>
-        </View>
-      </View>
+      )
+    }
+
+    const renderFilterTab = (status: FilterStatus) => (
+      <TouchableOpacity
+        key={status}
+        style={themed([$filterTab, selectedFilter === status && $filterTabActive])}
+        onPress={() => {
+          setSelectedFilter(status)
+          if (status === FilterStatus.All) {
+            fetchProjects()
+          } else {
+            fetchProjects(status)
+          }
+        }}
+      >
+        <Text style={themed([$filterTabText, selectedFilter === status && $filterTabTextActive])}>
+          {status}
+        </Text>
+      </TouchableOpacity>
     )
-  }
 
-  const renderFilterTab = (status: FilterStatus) => (
-    <TouchableOpacity
-      key={status}
-      style={themed([$filterTab, selectedFilter === status && $filterTabActive])}
-      onPress={() => {
-        setSelectedFilter(status)
-        if (status === FilterStatus.All) {
-          fetchProjects()
-        } else {
-          fetchProjects(status)
-        }
-      }}
-    >
-      <Text style={themed([$filterTabText, selectedFilter === status && $filterTabTextActive])}>
-        {status}
-      </Text>
-    </TouchableOpacity>
-  )
+    if (isLoading) {
+      return (
+        <Screen preset="fixed" contentContainerStyle={themed($loadingContainer)}>
+          <ActivityIndicator size="large" color={colors.tint} />
+        </Screen>
+      )
+    }
 
-  if (isLoading) {
     return (
-      <Screen preset="fixed" contentContainerStyle={themed($loadingContainer)}>
-        <ActivityIndicator size="large" color={colors.tint} />
+      <Screen preset="fixed" contentContainerStyle={themed($container)}>
+        {/* Filter Tabs */}
+        <View style={themed($filterContainer)}>
+          {[FilterStatus.All, FilterStatus.Active, FilterStatus.Closed].map((status) =>
+            renderFilterTab(status),
+          )}
+        </View>
+
+        {/* Projects List */}
+        {projects.length === 0 && !isLoading ? (
+          <EmptyState
+            preset="generic"
+            heading="No projects found"
+            content="Create your first project to get started"
+            button="Create Project"
+            buttonOnPress={() => navigation.navigate("CreateProject")}
+            style={themed({ flex: 1, padding: 16 })}
+          />
+        ) : (
+          <FlatList
+            data={projects}
+            renderItem={renderProjectCard}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={themed($listContainer)}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={refreshProjects}
+                tintColor={colors.tint}
+              />
+            }
+          />
+        )}
+
+        {error && (
+          <View style={themed($errorContainer)}>
+            <Text style={themed($errorText)}>Error: {error}</Text>
+          </View>
+        )}
       </Screen>
     )
-  }
-
-  return (
-    <Screen preset="fixed" contentContainerStyle={themed($container)}>
-      {/* Filter Tabs */}
-      <View style={themed($filterContainer)}>
-        {[FilterStatus.All, FilterStatus.Active, FilterStatus.Closed].map((status) =>
-          renderFilterTab(status),
-        )}
-      </View>
-
-      {/* Projects List */}
-      {projects.length === 0 && !isLoading ? (
-        <EmptyState
-          preset="generic"
-          heading="No projects found"
-          content="Create your first project to get started"
-          button="Create Project"
-          buttonOnPress={() => navigation.navigate("CreateProject")}
-          style={themed({ flex: 1, padding: 16 })}
-        />
-      ) : (
-        <FlatList
-          data={projects}
-          renderItem={renderProjectCard}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={themed($listContainer)}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={refreshProjects}
-              tintColor={colors.tint}
-            />
-          }
-        />
-      )}
-
-      {error && (
-        <View style={themed($errorContainer)}>
-          <Text style={themed($errorText)}>Error: {error}</Text>
-        </View>
-      )}
-    </Screen>
-  )
-}
+  },
+)
 
 const $container: ThemedStyle<ViewStyle> = ({ colors }) => ({
   flex: 1,

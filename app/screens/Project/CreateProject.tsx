@@ -11,8 +11,9 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5"
 import MaterialIcons from "@expo/vector-icons/MaterialIcons"
 import Constants from "expo-constants"
 import { useCallback, useRef, useState, useEffect } from "react"
+import { observer } from "mobx-react-lite"
 
-export const CreateProject = () => {
+export const CreateProject = observer(function CreateProject() {
   const navigation = useNavigation<AppStackScreenProps<"CreateProject">["navigation"]>()
   const mapRef = useRef<MapView>(null)
   const googleApiKey = Constants.expoConfig?.extra?.googleApiKey
@@ -241,7 +242,7 @@ export const CreateProject = () => {
       </View>
     </View>
   )
-}
+})
 
 // Themed styles using the theme system
 const $container: ThemedStyle<ViewStyle> = () => ({

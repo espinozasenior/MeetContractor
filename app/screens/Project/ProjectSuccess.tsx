@@ -3,6 +3,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import { Button, Screen } from "@/components"
 import { useHeader } from "@/utils/useHeader"
 import { useAppTheme } from "@/utils/useAppTheme"
+import { observer } from "mobx-react-lite"
 import { ThemedStyle } from "@/theme"
 import { AppStackParamList, AppStackScreenProps } from "@/navigators"
 import { useAuth } from "@clerk/clerk-expo"
@@ -10,7 +11,7 @@ import { useFileUpload } from "@/hooks/useFileUpload"
 
 type ProjectSuccessRouteProp = RouteProp<AppStackParamList, "ProjectSuccess">
 
-export const ProjectSuccess = () => {
+export const ProjectSuccess = observer(function ProjectSuccess() {
   const navigation = useNavigation<AppStackScreenProps<"ProjectSuccess">["navigation"]>()
   const route = useRoute<ProjectSuccessRouteProp>()
   const { themed } = useAppTheme()
@@ -84,7 +85,7 @@ export const ProjectSuccess = () => {
       </View>
     </Screen>
   )
-}
+})
 
 // Styled components
 const $container: ThemedStyle<ViewStyle> = ({ colors }) => ({

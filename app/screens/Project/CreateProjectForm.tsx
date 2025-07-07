@@ -2,6 +2,7 @@ import { useState } from "react"
 import { View, Text, TextInput, ScrollView, ViewStyle, TextStyle, Alert } from "react-native"
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import { useAuth } from "@clerk/clerk-expo"
+import { observer } from "mobx-react-lite"
 import { Button, Screen } from "@/components"
 import { useAppTheme } from "@/utils/useAppTheme"
 import { useHeader } from "@/utils/useHeader"
@@ -60,7 +61,7 @@ const FloatingLabelInput = ({
   )
 }
 
-export const CreateProjectForm = () => {
+export const CreateProjectForm = observer(function CreateProjectForm() {
   const navigation = useNavigation<AppStackScreenProps<"CreateProjectForm">["navigation"]>()
   const route = useRoute<CreateProjectFormRouteProp>()
   const { themed, theme } = useAppTheme()
@@ -237,16 +238,12 @@ export const CreateProjectForm = () => {
       </View>
     </Screen>
   )
-}
+})
 
 // Styled components
 const $container: ThemedStyle<ViewStyle> = ({ colors }) => ({
   flex: 1,
   backgroundColor: colors.background,
-})
-
-const $keyboardContainer: ThemedStyle<ViewStyle> = () => ({
-  flex: 1,
 })
 
 const $scrollView: ThemedStyle<ViewStyle> = () => ({

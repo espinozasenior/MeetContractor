@@ -1,5 +1,5 @@
 import { View, ViewStyle, ActivityIndicator } from "react-native"
-import { Screen, Text } from "@/components"
+import { Screen } from "@/components"
 import { useAppTheme } from "@/utils/useAppTheme"
 import { ThemedStyle } from "@/theme"
 
@@ -10,7 +10,6 @@ export const LoadingScreen = () => {
     <Screen preset="fixed" contentContainerStyle={themed($container)}>
       <View style={themed($content)}>
         <ActivityIndicator size="large" color={theme.colors.tint} />
-        <Text text="Loading your projects..." style={themed($loadingText)} />
       </View>
     </Screen>
   )
@@ -26,9 +25,4 @@ const $container: ThemedStyle<ViewStyle> = ({ colors }) => ({
 const $content: ThemedStyle<ViewStyle> = () => ({
   alignItems: "center",
   gap: 16,
-})
-
-const $loadingText: ThemedStyle<ViewStyle> = ({ colors, spacing }) => ({
-  color: colors.text,
-  marginTop: spacing.md,
 })
