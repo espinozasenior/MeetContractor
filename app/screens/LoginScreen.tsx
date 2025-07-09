@@ -1,7 +1,7 @@
 import * as React from "react"
 import { observer } from "mobx-react-lite"
 import { FC, useEffect, useState } from "react"
-import { ViewStyle, TextStyle, Image, View, ImageStyle, ImageBackground } from "react-native"
+import { ViewStyle, TextStyle, Image, View, ImageStyle } from "react-native"
 import { Screen, Text, Button } from "../components"
 import { AppStackScreenProps } from "../navigators"
 import type { ThemedStyle } from "@/theme"
@@ -58,18 +58,14 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen(_
       style={themed($screen)}
     >
       <View style={themed($logoContainer)}>
-        <Image source={require("../../assets/images/logo.png")} style={themed($logo)} />
+        <Image source={require("../../assets/images/app-logo.png")} style={themed($logo)} />
         <Text text="Meet Contractor" preset="subheading" style={themed($logoText)} />
+        <Text
+          text="We’re going to build your dreams together and closer to you."
+          preset="subheading"
+          style={themed($description)}
+        />
       </View>
-
-      <ImageBackground
-        source={require("../../assets/images/demo/rnr-image-1.png")} // Placeholder graphic
-        style={themed($backgroundGraphic)}
-        resizeMode="contain"
-      >
-        {/* Ensures ImageBackground takes space and allows content overlay if needed */}
-        <View style={{ flex: 1 }} />
-      </ImageBackground>
 
       <View style={themed($bottomContainer)}>
         <SignedIn>
@@ -84,25 +80,38 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen(_
               {/* Social Login Buttons */}
               <Button
                 text="Continue with Google"
-                preset="filled"
-                onPress={() => handleSSOSignIn('oauth_google')}
-              />
-              <View style={themed($appleButtonContainer)}>
-                <View style={themed($appleButton)}>
+                preset="default"
+                LeftAccessory={() => (
                   <Image
-                    source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' }}
+                    source={require("../../assets/images/google-logo.png")}
+                    style={themed($googleLogo)}
+                  />
+                )}
+                onPress={() => handleSSOSignIn("oauth_google")}
+              />
+              <Button
+                text="Continue with Apple"
+                preset="filled"
+                style={themed($appleButton)}
+                textStyle={themed($appleButtonText)}
+                LeftAccessory={() => (
+                  <Image
+                    source={require("../../assets/images/apple-logo.png")}
                     style={themed($appleLogo)}
                   />
-                  <Text style={themed($appleButtonText)} text="Sign in with Apple" />
-                </View>
-              </View>
+                )}
+                onPress={() => handleSSOSignIn("oauth_apple")}
+              />
+
               {/* Main Login Button */}
               <Button
                 text="Log In"
                 style={themed($tapButton)}
                 textStyle={themed($tapButtonText)}
                 preset="filled"
-                onPress={() => { /* TODO: Implement actual login logic or navigation */ }}
+                onPress={() => {
+                  /* TODO: Implement actual login logic or navigation */
+                }}
               />
 
               {/* Create Account Text */}
@@ -133,32 +142,29 @@ const $screenContentContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   paddingTop: (spacing.xxl || 0) * 2, // Cast/default spacing.xxl before multiplying
 })
 
-const $logoContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+const $logoContainer: ThemedStyle<ViewStyle> = () => ({
   alignItems: "center",
   // Removed marginBottom, rely on space-between in container
 })
 
 const $logo: ThemedStyle<ImageStyle> = () => ({
-  width: 60, // Slightly smaller logo
-  height: 60,
   resizeMode: "contain",
 })
 
 const $logoText: ThemedStyle<TextStyle> = ({ typography, spacing, colors }) => ({
   fontFamily: typography.primary.bold,
   fontSize: 24,
-  color: colors.palette.chiefsYellow,
-  marginTop: spacing.xs,
+  color: colors.palette.neutral900,
+  marginTop: spacing.xl,
 })
 
-const $backgroundGraphic: ThemedStyle<ImageStyle> = ({ spacing }) => ({
-  position: "absolute",
-  bottom: 200, // Adjust position relative to bottom container
-  left: spacing.lg,
-  right: spacing.lg,
-  height: 200, // Adjust height
-  opacity: 0.15, // Make it subtle
-  zIndex: -1, // Ensure it's behind other elements
+const $description: ThemedStyle<TextStyle> = ({ typography, spacing, colors }) => ({
+  fontFamily: typography.primary.normal,
+  fontSize: 16,
+  textAlign: "center",
+  color: colors.palette.neutral900,
+  marginTop: spacing.xs,
+  maxWidth: 320,
 })
 
 const $bottomContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
@@ -184,13 +190,19 @@ const $hint: ThemedStyle<TextStyle> = ({ colors, spacing }) => ({
   marginBottom: spacing.md,
 })
 
+const $googleLogo: ThemedStyle<ImageStyle> = () => ({
+  width: 20,
+  height: 20,
+  marginRight: 10,
+  resizeMode: "contain",
+})
+
 // This style seems unused in the current component logic
 // const $textField: ThemedStyle<ViewStyle> = ({ spacing }) => ({
 //   marginBottom: spacing.lg,
 // })
 
 const $tapButton: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
-  marginTop: spacing.md,
   backgroundColor: colors.palette.chiefsYellow,
   borderRadius: spacing.sm,
 })
@@ -200,18 +212,12 @@ const $tapButtonText: ThemedStyle<TextStyle> = ({ colors }) => ({
   color: colors.text, // Use theme's default text color for contrast
 })
 
-const $appleButtonContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
-  marginTop: spacing.md,
-  marginBottom: spacing.md,
-  alignItems: "center",
-})
-
-const $appleButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+const $appleButton: ThemedStyle<ViewStyle> = () => ({
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "center",
   backgroundColor: "#000",
-  borderRadius: 6,
+  borderRadius: 12,
   height: 44,
   paddingHorizontal: 16,
   width: "100%",
