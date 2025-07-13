@@ -1,7 +1,7 @@
 import { type Instance, type SnapshotOut, types } from "mobx-state-tree"
 import { ProjectModel } from "./Project"
-import { api } from "../services/api"
-import { withSetPropAction } from "./helpers/withSetPropAction"
+import { projectService } from "@/services/api"
+import { withSetPropAction } from "@/models/helpers/withSetPropAction"
 import type { GetToken } from "@clerk/types"
 
 /**
@@ -29,7 +29,7 @@ export const ProjectStoreModel = types
         }
 
         console.log("📡 ProjectStore: Llamando a api.getProjects...")
-        const response = await api.getProjects(getToken, status)
+        const response = await projectService.getProjects(getToken, status)
         console.log("📡 ProjectStore: Respuesta recibida", { kind: response.kind })
 
         if (response.kind === "ok") {

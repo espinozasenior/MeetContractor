@@ -1,5 +1,4 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
-import { useClerk } from "@clerk/clerk-expo"
 
 export const AuthenticationStoreModel = types
   .model("AuthenticationStore")
@@ -16,23 +15,23 @@ export const AuthenticationStoreModel = types
       store.authToken = value
     },
     logout: flow(function* logout(signOut?: () => Promise<void>) {
-      console.log("logout action: attempting sign out");
+      console.log("logout action: attempting sign out")
       if (signOut) {
         try {
-          console.log("logout action: calling signOut");
-          yield signOut();
-          console.log("logout action: signOut completed");
+          console.log("logout action: calling signOut")
+          yield signOut()
+          console.log("logout action: signOut completed")
         } catch (error) {
-          console.error("logout action: Error during Clerk signOut:", error);
+          console.error("logout action: Error during Clerk signOut:", error)
           // Optionally handle the error, e.g., show a message to the user
           // For now, we'll proceed to clear the local token regardless
         }
       } else {
-        console.warn("logout action: signOut function not provided.");
+        console.warn("logout action: signOut function not provided.")
       }
-      console.log("logout action: clearing token");
-      store.authToken = undefined;
-      console.log("logout action: token cleared");
+      console.log("logout action: clearing token")
+      store.authToken = undefined
+      console.log("logout action: token cleared")
     }),
   }))
 
