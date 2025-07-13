@@ -1,14 +1,13 @@
 import { useState } from "react"
 import { View, Text, TextInput, ScrollView, ViewStyle, TextStyle, Alert } from "react-native"
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
-import { useAuth } from "@clerk/clerk-expo"
 import { observer } from "mobx-react-lite"
 import { Button, Screen } from "@/components"
 import { useAppTheme } from "@/utils/useAppTheme"
 import { useHeader } from "@/utils/useHeader"
 import { ThemedStyle } from "@/theme"
 import { AppStackParamList, AppStackScreenProps } from "@/navigators"
-import { api } from "@/services/api"
+import { useProjects } from "@/hooks"
 
 type CreateProjectFormRouteProp = RouteProp<AppStackParamList, "CreateProjectForm">
 
@@ -65,8 +64,9 @@ export const CreateProjectForm = observer(function CreateProjectForm() {
   const navigation = useNavigation<AppStackScreenProps<"CreateProjectForm">["navigation"]>()
   const route = useRoute<CreateProjectFormRouteProp>()
   const { themed, theme } = useAppTheme()
-  const { getToken } = useAuth()
-  const [isCreating, setIsCreating] = useState(false)
+
+  // Usamos el hook useProjects para obtener la mutación createProject
+  const { createProject, isCreating } = useProjects()
 
   // Get address data from navigation params
   const { address } = route.params || {}
@@ -99,8 +99,6 @@ export const CreateProjectForm = observer(function CreateProjectForm() {
   const handleCreateProject = async () => {
     if (!isFormValid() || isCreating) return
 
-    setIsCreating(true)
-
     try {
       const projectData = {
         name: formData.projectName.trim(),
@@ -116,31 +114,21 @@ export const CreateProjectForm = observer(function CreateProjectForm() {
         },
       }
 
-      const result = await api.createProject(getToken, projectData)
+      // Usamos la mutación createProject del hook en lugar de llamar al servicio directamente
+      const result = await createProject(projectData)
 
-      if (result.kind === "ok") {
-        console.log("Project created:", result.project)
-        // Navigate to success screen with project details
-        navigation.navigate("ProjectSuccess", {
-          projectId: result.project.id,
-          projectName: formData.projectName.trim(),
-          address: `${formData.city}, ${formData.state} ${formData.postalCode}`,
-        })
-      } else {
-        // Handle API error
-
-        console.log("Error creating project:", result)
-        Alert.alert("Error", "No se pudo crear el proyecto. Por favor, intenta de nuevo.", [
-          { text: "OK" },
-        ])
-      }
+      console.log("Project created:", result)
+      // Navigate to success screen with project details
+      navigation.navigate("ProjectSuccess", {
+        projectId: result.id,
+        projectName: formData.projectName.trim(),
+        address: `${formData.city}, ${formData.state} ${formData.postalCode}`,
+      })
     } catch (error) {
       console.error("Error creating project:", error)
-      Alert.alert("Error", "Ocurrió un error inesperado. Por favor, intenta de nuevo.", [
+      Alert.alert("Error", "Ocurrió un error al crear el proyecto. Por favor, intenta de nuevo.", [
         { text: "OK" },
       ])
-    } finally {
-      setIsCreating(false)
     }
   }
 
