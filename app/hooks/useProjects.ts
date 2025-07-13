@@ -1,70 +1,151 @@
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useCallback } from "react"
 import { useAuth } from "@clerk/clerk-react"
-import { useStores } from "../models"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { projectService } from "@/services/api"
+import type { CreateProjectRequest, ProjectResponse } from "@/services/api/api.types"
+
+// Claves para las consultas de proyectos
+const PROJECTS_QUERY_KEY = "projects"
 
 /**
- * Hook para manejar la obtención y estado de los proyectos
+ * Hook para manejar la obtención y estado de los proyectos usando TanStack Query
+ * @param params Opciones para filtrar proyectos
+ * @param params.status Filtro por estado: 'active' o 'closed'
  */
-export const useProjects = () => {
+export const useProjects = ({ status }: { status?: "active" | "closed" } = {}) => {
   const { getToken } = useAuth()
-  const { projectStore } = useStores()
-  const [currentFilter, setCurrentFilter] = useState<"active" | "closed" | undefined>(undefined)
-  const isFetchingRef = useRef(false)
+  const queryClient = useQueryClient()
 
-  // Función para obtener proyectos con filtro opcional
-  const fetchProjects = useCallback(
-    async (status?: "active" | "closed") => {
-      // Evitar llamadas simultáneas
-      if (isFetchingRef.current) {
-        console.log("🛑 useProjects: fetchProjects ya está en progreso, ignorando nueva llamada")
-        return
+  // Consulta principal para obtener proyectos con TanStack Query
+  const {
+    data: projectsData,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: [PROJECTS_QUERY_KEY, status],
+    queryFn: async () => {
+      console.log("🎯 useProjects: obteniendo proyectos", {
+        status,
+      })
+      if (!getToken) {
+        throw new Error("Authentication token not available")
       }
 
-      console.log("🎯 useProjects: fetchProjects iniciado", { status })
-      isFetchingRef.current = true
-
-      try {
-        await projectStore.fetchProjects(getToken, status)
-        setCurrentFilter(status)
-        console.log("✅ useProjects: fetchProjects completado exitosamente")
-      } catch (error) {
-        console.error("❌ useProjects: Error en fetchProjects:", error)
-      } finally {
-        isFetchingRef.current = false
+      const response = await projectService.getProjects(getToken, status)
+      if (response.kind === "ok") {
+        console.log(
+          `✅ useProjects: ${response.projects.projects?.length || 0} proyectos obtenidos`,
+        )
+        return response.projects.projects
+      } else {
+        console.error("❌ useProjects: Error en respuesta de API", response)
+        throw new Error("Failed to fetch projects")
       }
     },
-    [projectStore, getToken],
+    staleTime: 5 * 60 * 1000, // 5 minutos de frescura
+    gcTime: 10 * 60 * 1000, // 10 minutos en caché
+  })
+
+  // Mutación para crear un nuevo proyecto
+  const createProjectMutation = useMutation({
+    mutationFn: async (projectData: CreateProjectRequest) => {
+      if (!getToken) {
+        throw new Error("Authentication token not available")
+      }
+
+      const response = await projectService.createProject(getToken, projectData)
+      if (response.kind === "ok") {
+        // Tratar la respuesta como ProjectResponse aunque técnicamente es CreateProjectResponse
+        return response.project as unknown as ProjectResponse
+      } else {
+        throw new Error("Failed to create project")
+      }
+    },
+    onSuccess: async () => {
+      // Invalidar consultas para recargar proyectos
+      await queryClient.invalidateQueries({ queryKey: [PROJECTS_QUERY_KEY] })
+    },
+  })
+
+  // Mutación para actualizar un proyecto
+  const updateProjectMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateProjectRequest> }) => {
+      if (!getToken) {
+        throw new Error("Authentication token not available")
+      }
+
+      const response = await projectService.updateProject(getToken, id, data)
+      if (response.kind === "ok") {
+        // Tratar la respuesta como ProjectResponse aunque técnicamente es CreateProjectResponse
+        return response.project as unknown as ProjectResponse
+      } else {
+        throw new Error("Failed to update project")
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [PROJECTS_QUERY_KEY] })
+    },
+  })
+
+  // Mutación para eliminar un proyecto
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      if (!getToken) {
+        throw new Error("Authentication token not available")
+      }
+
+      const response = await projectService.deleteProject(getToken, projectId)
+      if (response.kind === "ok") {
+        return projectId
+      } else {
+        throw new Error("Failed to delete project")
+      }
+    },
+    onSuccess: (deletedId) => {
+      queryClient.invalidateQueries({ queryKey: [PROJECTS_QUERY_KEY] })
+      // También podemos actualizar la caché directamente para una actualización más rápida
+      queryClient.setQueryData(
+        [PROJECTS_QUERY_KEY, status],
+        (old: ProjectResponse[] | undefined) => {
+          return old ? old.filter((project) => project.id !== deletedId) : []
+        },
+      )
+    },
+  })
+
+  // Función para refrescar proyectos
+  const refreshProjects = useCallback(() => {
+    console.log("🔄 useProjects: refreshProjects iniciado")
+    return refetch()
+  }, [refetch])
+
+  // Función para obtener un proyecto por ID
+  const getProjectById = useCallback(
+    (id: string) => {
+      return projectsData?.find((project) => project.id === id)
+    },
+    [projectsData],
   )
 
-  // Función para refrescar proyectos manteniendo el filtro actual
-  const refreshProjects = useCallback(async () => {
-    console.log("🔄 useProjects: refreshProjects iniciado")
-    await fetchProjects(currentFilter)
-  }, [fetchProjects, currentFilter])
-
-  // Obtener proyectos al montar el hook (sin filtro - todos los proyectos)
-  useEffect(() => {
-    console.log("🎬 useProjects: useEffect inicial ejecutándose")
-    fetchProjects()
-  }, [fetchProjects])
-
-  // Filtrar proyectos por estado (ya no necesario porque la API filtra)
-  const getProjectsByStatus = (_status?: string) => {
-    // Como la API ahora filtra, simplemente devolvemos todos los proyectos
-    // que ya están filtrados por la API
-    return projectStore.projects
-  }
+  // Preparar proyectos y propiedades derivadas
+  const projects = projectsData || []
+  const hasProjects = projects.length > 0
+  const projectCount = projects.length
 
   return {
-    projects: projectStore.projects,
-    isLoading: projectStore.isLoading,
-    error: projectStore.error,
-    hasProjects: projectStore.hasProjects,
-    projectCount: projectStore.projectCount,
-    fetchProjects,
+    projects,
+    isLoading,
+    error: error ? (error as Error).message : null,
+    hasProjects,
+    projectCount,
     refreshProjects,
-    getProjectsByStatus,
-    getProjectById: projectStore.getProjectById,
-    currentFilter,
+    getProjectById,
+    createProject: createProjectMutation.mutateAsync,
+    updateProject: updateProjectMutation.mutateAsync,
+    deleteProject: deleteProjectMutation.mutateAsync,
+    isCreating: createProjectMutation.isPending,
+    isUpdating: updateProjectMutation.isPending,
+    isDeleting: deleteProjectMutation.isPending,
   }
 }
