@@ -15,8 +15,8 @@ import { useStores } from "../models"
 import { DemoNavigator, DemoTabParamList } from "./DemoNavigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { useAppTheme, useThemeProvider } from "@/utils/useAppTheme"
-import { ComponentProps, useEffect, useState } from "react"
-import { useAuth } from "@clerk/clerk-expo"
+import { ComponentProps } from "react"
+import { useProjects } from "@/hooks"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -74,34 +74,18 @@ const Stack = createNativeStackNavigator<AppStackParamList>()
 const AppStack = observer(function AppStack() {
   const {
     authenticationStore: { isAuthenticated },
-    projectStore: { hasProjects, isLoading, fetchProjects },
   } = useStores()
-  const { getToken } = useAuth()
-  const [isProjectsChecked, setIsProjectsChecked] = useState(false)
+
+  // Usamos el hook useProjects en lugar del projectStore
+  const { isLoading, hasProjects } = useProjects()
 
   const {
     theme: { colors },
   } = useAppTheme()
   console.log("hasProjects", hasProjects)
-  // Check for projects when authenticated
-  useEffect(() => {
-    const checkProjects = async () => {
-      if (isAuthenticated && !isProjectsChecked) {
-        try {
-          await fetchProjects(getToken)
-        } catch (error) {
-          console.error("Error checking projects:", error)
-        } finally {
-          setIsProjectsChecked(true)
-        }
-      }
-    }
-
-    checkProjects()
-  }, [isAuthenticated, fetchProjects, getToken, isProjectsChecked])
 
   // Show loading while checking projects
-  if (isAuthenticated && isLoading && !isProjectsChecked) {
+  if (isAuthenticated && isLoading) {
     return <Screens.LoadingScreen />
   }
 

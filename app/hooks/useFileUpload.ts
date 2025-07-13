@@ -1,9 +1,8 @@
-import { useState } from "react"
 import { Alert } from "react-native"
 import * as ImagePicker from "expo-image-picker"
 import * as DocumentPicker from "expo-document-picker"
 import type { GetToken } from "@clerk/types"
-import { fileUploadService } from "@/services/file/fileUpload"
+import { useMutation } from "@tanstack/react-query"
 import {
   getCameraOptions,
   getGalleryOptions,
@@ -11,6 +10,8 @@ import {
   convertAssetsToUploadData,
   convertImagePickerAsset,
 } from "@/utils/fileUtils"
+import { UploadFileData } from "@/services/api/api.types"
+import { fileService } from "@/services/api"
 
 export interface UseFileUploadProps {
   projectId?: string
@@ -47,7 +48,58 @@ export const useFileUpload = ({
   customCameraOptions,
   customUploadOptions,
 }: UseFileUploadProps): UseFileUploadReturn => {
-  const [isUploading, setIsUploading] = useState(false)
+  // Mutación para subir un archivo único
+  const singleFileMutation = useMutation({
+    mutationFn: async ({ file, pId }: { file: UploadFileData; pId: string }) => {
+      if (!getToken) {
+        throw new Error("Authentication token not available")
+      }
+
+      const result = await fileService.uploadFile(getToken, pId, file)
+      if (result.kind !== "ok") {
+        throw new Error(fileService.getErrorMessage(result.kind))
+      }
+      return result.file
+    },
+    onSuccess: () => {
+      const message = fileService.getSuccessMessage(1)
+      onUploadSuccess?.(message)
+      Alert.alert("Success", message)
+    },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload file"
+      onUploadError?.(errorMessage)
+      Alert.alert("Error", errorMessage)
+    },
+  })
+
+  // Mutación para subir múltiples archivos
+  const multipleFilesMutation = useMutation({
+    mutationFn: async ({ files, pId }: { files: UploadFileData[]; pId: string }) => {
+      if (!getToken) {
+        throw new Error("Authentication token not available")
+      }
+
+      const result = await fileService.uploadMultipleFiles(getToken, pId, files)
+      if (result.kind !== "ok") {
+        throw new Error(fileService.getErrorMessage(result.kind))
+      }
+      return result.response
+    },
+    onSuccess: (data) => {
+      const message = fileService.getSuccessMessage(data.successCount)
+      onUploadSuccess?.(message)
+      Alert.alert("Success", message)
+    },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload files"
+      onUploadError?.(errorMessage)
+      Alert.alert("Error", errorMessage)
+    },
+  })
+
+  // Estado de carga combinado
+  const isUploading = singleFileMutation.isPending || multipleFilesMutation.isPending
 
   const handleTakePhotos = async () => {
     if (!projectId) {
@@ -202,38 +254,29 @@ export const useFileUpload = ({
     }
   }
 
-  const uploadFiles = async (filesData: any[]) => {
-    if (!projectId || !getToken) {
-      Alert.alert("Error", "Project ID and authentication are required")
+  const uploadFiles = async (filesData: UploadFileData[]) => {
+    if (!projectId) {
+      Alert.alert("Error", "Project ID is required")
       return
     }
 
-    setIsUploading(true)
-
     try {
-      let result
-
       if (filesData.length === 1) {
-        result = await fileUploadService.uploadSingleFile(getToken, projectId, filesData[0])
+        // Usar la mutación de un solo archivo
+        await singleFileMutation.mutateAsync({
+          file: filesData[0],
+          pId: projectId,
+        })
       } else {
-        result = await fileUploadService.uploadMultipleFiles(getToken, projectId, filesData)
-      }
-
-      if (result.success) {
-        const message = fileUploadService.getSuccessMessage(filesData.length)
-        onUploadSuccess?.(message)
-        Alert.alert("Success", message)
-      } else {
-        const error = fileUploadService.getErrorMessage(result.error)
-        onUploadError?.(error)
-        Alert.alert("Error", error)
+        // Usar la mutación de múltiples archivos
+        await multipleFilesMutation.mutateAsync({
+          files: filesData,
+          pId: projectId,
+        })
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      onUploadError?.(errorMessage)
-      Alert.alert("Error", errorMessage)
-    } finally {
-      setIsUploading(false)
+      // Los errores ya están manejados en los callbacks de onError
+      console.error("Error in uploadFiles:", error)
     }
   }
 

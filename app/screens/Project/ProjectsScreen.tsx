@@ -19,7 +19,7 @@ import { useHeader } from "@/utils/useHeader"
 import { colors } from "@/theme"
 import { useAppTheme } from "@/utils/useAppTheme"
 import { useProjects } from "@/hooks"
-import { Project } from "../../models/Project"
+import type { ProjectResponse } from "@/services/api/api.types"
 
 const { width: screenWidth } = Dimensions.get("window")
 
@@ -34,7 +34,13 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
     const { navigation } = _props
     const { themed } = useAppTheme()
     const [selectedFilter, setSelectedFilter] = useState<FilterStatus>(FilterStatus.All)
-    const { projects, isLoading, error, refreshProjects, fetchProjects } = useProjects()
+
+    // Usar el hook useProjects con TanStack Query pasándole el filtro seleccionado
+    const { projects, isLoading, error, refreshProjects } = useProjects({
+      // Solo pasamos status cuando no es "All"
+      status: selectedFilter !== FilterStatus.All ? selectedFilter : undefined,
+    })
+
     const [activeImageIndexes, setActiveImageIndexes] = useState<Record<string, number>>({})
     const flatListRef = useRef<FlatList>(null)
     console.log("isLoading", isLoading)
@@ -69,19 +75,19 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
       )
     }
 
-    const renderProjectCard = ({ item }: { item: Project }) => {
+    const renderProjectCard = ({ item }: { item: ProjectResponse }) => {
       const currentActiveIndex = activeImageIndexes[item.id] || 0
 
+      // Creamos la dirección completa manualmente ya que ya no tenemos el getter fullAddress
+      const fullAddress = `${item.addressLine1}${item.addressLine2 ? ", " + item.addressLine2 : ""}, ${item.city}, ${item.state}, ${item.postalCode}`
+
       const renderPaginationDots = () => {
-        // Obtener las imágenes (reales o de demostración)
-        const imagesList =
-          item.images.length > 0
-            ? item.images
-            : [
-                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-              ]
+        // Usamos imágenes de demostración ya que ProjectResponse no tiene el campo images
+        const imagesList = [
+          "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+          "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+          "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        ]
 
         return (
           <View style={themed($paginationContainer)}>
@@ -104,15 +110,11 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
           <View style={themed($cardImageContainer)}>
             <FlatList
               ref={flatListRef}
-              data={
-                item.images.length > 0
-                  ? item.images.map((img) => img.toString())
-                  : [
-                      "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                      "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                      "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                    ]
-              }
+              data={[
+                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                "https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+              ]}
               renderItem={renderImage}
               horizontal
               pagingEnabled
@@ -131,7 +133,7 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
           <View style={themed($cardContent)}>
             <Text style={themed($cardTitle)}>{item.description || "No description"}</Text>
             <Text style={themed($projectName)}>{item.name}</Text>
-            <Text style={themed($address)}>{item.fullAddress}</Text>
+            <Text style={themed($address)}>{fullAddress}</Text>
           </View>
         </View>
       )
@@ -143,11 +145,6 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
         style={themed([$filterTab, selectedFilter === status && $filterTabActive])}
         onPress={() => {
           setSelectedFilter(status)
-          if (status === FilterStatus.All) {
-            fetchProjects()
-          } else {
-            fetchProjects(status)
-          }
         }}
       >
         <Text style={themed([$filterTabText, selectedFilter === status && $filterTabTextActive])}>
@@ -155,14 +152,6 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
         </Text>
       </TouchableOpacity>
     )
-
-    if (isLoading) {
-      return (
-        <Screen preset="fixed" contentContainerStyle={themed($loadingContainer)}>
-          <ActivityIndicator size="large" color={colors.tint} />
-        </Screen>
-      )
-    }
 
     return (
       <Screen preset="fixed" contentContainerStyle={themed($container)}>
@@ -173,37 +162,46 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
           )}
         </View>
 
-        {/* Projects List */}
-        {projects.length === 0 && !isLoading ? (
-          <EmptyState
-            preset="generic"
-            heading="No projects found"
-            content="Create your first project to get started"
-            button="Create Project"
-            buttonOnPress={() => navigation.navigate("CreateProject")}
-            style={themed({ flex: 1, padding: 16 })}
-          />
-        ) : (
-          <FlatList
-            data={projects}
-            renderItem={renderProjectCard}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={themed($listContainer)}
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoading}
-                onRefresh={refreshProjects}
-                tintColor={colors.tint}
-              />
-            }
-          />
-        )}
-
-        {error && (
-          <View style={themed($errorContainer)}>
-            <Text style={themed($errorText)}>Error: {error}</Text>
+        {/* Loading State */}
+        {isLoading ? (
+          <View style={themed($loadingContainer)}>
+            <ActivityIndicator size="large" color={colors.tint} />
           </View>
+        ) : (
+          <>
+            {/* Projects List */}
+            {projects.length === 0 ? (
+              <EmptyState
+                preset="generic"
+                heading="No projects found"
+                content="Create your first project to get started"
+                button="Create Project"
+                buttonOnPress={() => navigation.navigate("CreateProject")}
+                style={themed({ flex: 1, padding: 16 })}
+              />
+            ) : (
+              <FlatList
+                data={projects}
+                renderItem={renderProjectCard}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={themed($listContainer)}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refreshProjects}
+                    tintColor={colors.tint}
+                  />
+                }
+              />
+            )}
+
+            {error && (
+              <View style={themed($errorContainer)}>
+                <Text style={themed($errorText)}>Error: {error}</Text>
+              </View>
+            )}
+          </>
         )}
       </Screen>
     )

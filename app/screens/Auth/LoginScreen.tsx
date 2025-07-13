@@ -2,10 +2,11 @@ import * as React from "react"
 import { observer } from "mobx-react-lite"
 import { FC, useEffect, useState } from "react"
 import { ViewStyle, TextStyle, Image, View, ImageStyle } from "react-native"
-import { Screen, Text, Button } from "../components"
-import { AppStackScreenProps } from "../navigators"
+import { Screen, Text, Button } from "@/components"
+import { AppStackScreenProps } from "@/navigators"
 import type { ThemedStyle } from "@/theme"
 import { useAppTheme } from "@/utils/useAppTheme"
+import AppLogo from "../../../assets/images/app-logo.svg"
 import { useAuth, SignedIn, SignedOut, useSSO } from "@clerk/clerk-expo"
 import type { OAuthStrategy } from "@clerk/types"
 import { useStores } from "@/models"
@@ -58,7 +59,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen(_
       style={themed($screen)}
     >
       <View style={themed($logoContainer)}>
-        <Image source={require("../../assets/images/app-logo.png")} style={themed($logo)} />
+        <AppLogo />
         <Text text="Meet Contractor" preset="subheading" style={themed($logoText)} />
         <Text
           text="We’re going to build your dreams together and closer to you."
@@ -83,7 +84,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen(_
                 preset="default"
                 LeftAccessory={() => (
                   <Image
-                    source={require("../../assets/images/google-logo.png")}
+                    source={require("../../../assets/images/google-logo.png")}
                     style={themed($googleLogo)}
                   />
                 )}
@@ -96,7 +97,7 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen(_
                 textStyle={themed($appleButtonText)}
                 LeftAccessory={() => (
                   <Image
-                    source={require("../../assets/images/apple-logo.png")}
+                    source={require("../../../assets/images/apple-logo.png")}
                     style={themed($appleLogo)}
                   />
                 )}
