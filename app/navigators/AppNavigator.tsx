@@ -38,6 +38,7 @@ export type AppStackParamList = {
   ChatList: undefined
   Chat: { conversationId: string }
   CreateProject: undefined
+  PersonalInfo: undefined
   CreateProjectForm: {
     address?: {
       street?: string
@@ -118,6 +119,7 @@ const AppStack = observer(function AppStack() {
           <Stack.Screen name="CreateProject" component={Screens.CreateProject} />
           <Stack.Screen name="CreateProjectForm" component={Screens.CreateProjectForm} />
           <Stack.Screen name="ProjectSuccess" component={Screens.ProjectSuccess} />
+          <Stack.Screen name="PersonalInfo" component={Screens.PersonalInfoScreen} />
         </React.Fragment>
       ) : (
         <>
