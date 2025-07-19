@@ -29,7 +29,7 @@ export const LoadingScreen = () => {
 
 const $container: ThemedStyle<ViewStyle> = ({ colors }) => ({
   flex: 1,
-  backgroundColor: colors.background,
+  backgroundColor: colors.palette.primary500,
   justifyContent: "center",
   alignItems: "center",
 })
