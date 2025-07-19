@@ -3,7 +3,7 @@ import { CompositeScreenProps } from "@react-navigation/native"
 import { TextStyle, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "../components"
-import { ChatScreen, DemoDebugScreen, ProjectsScreen } from "../screens"
+import { ChatListScreen, DemoDebugScreen, ProjectsScreen } from "../screens"
 import type { ThemedStyle } from "@/theme"
 import { AppStackParamList, AppStackScreenProps } from "./AppNavigator"
 import { useAppTheme } from "@/utils/useAppTheme"
@@ -13,7 +13,7 @@ export type DemoTabParamList = {
   DemoShowroom: { queryIndex?: string; itemIndex?: string }
   DemoDebug: undefined
   DemoPodcastList: undefined
-  DemoChat: undefined
+  ChatList: undefined
 }
 
 /**
@@ -70,10 +70,10 @@ export function DemoNavigator() {
       />
 
       <Tab.Screen
-        name="DemoChat"
-        component={ChatScreen as any} // Use placeholder component
+        name="ChatList"
+        component={ChatListScreen} // Use placeholder component
         options={{
-          tabBarLabel: "Chat",
+          tabBarLabel: "Chats",
           tabBarIcon: ({ focused }) => (
             <Icon
               icon={focused ? "message2" : "message"}
@@ -82,16 +82,7 @@ export function DemoNavigator() {
             />
           ),
           tabBarAccessibilityLabel: "Chat",
-          tabBarStyle: { display: "none" }, // Hide tab bar for this screen
         }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            // Prevent default action
-            e.preventDefault()
-            // Navigate to Chat screen in the App stack
-            navigation.navigate("DemoChat")
-          },
-        })}
       />
 
       <Tab.Screen

@@ -62,6 +62,10 @@ export interface ConversationMessagesResponse {
   }
 }
 
+export interface ConversationsResponse {
+  chats: ConversationResponse[]
+}
+
 /**
  * Parameters for getting conversation messages with pagination
  */
@@ -102,10 +106,7 @@ export interface ResponseMessage {
   content: string | null
   attachments?: MessageAttachment[]
   createdAt: string
-  author: {
-    id: string
-    name: string
-  }
+  authorId: string
 }
 
 /**
@@ -266,11 +267,11 @@ export interface ProjectResponse {
  * Individual conversation in a project
  */
 export interface ConversationResponse {
-  id: string
-  title: string
-  createdAt: string
-  updatedAt: string
-  lastReadAt: string | null
-  lastMessageAt: string | null
-  visibility: string
+  conversationId: string
+  projectId: string
+  projectName: string
+  lastMessage: string | null
+  lastMessageTimestamp: string | null
+  lastMessageAuthor: string | null
+  hasUnreadMessages: boolean
 }

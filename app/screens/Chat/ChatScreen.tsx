@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState, useEffect } from "react"
 import type { ViewStyle, TextStyle } from "react-native"
 import { View } from "react-native"
 import { GiftedChat, Bubble } from "react-native-gifted-chat"
@@ -6,173 +6,55 @@ import type { IMessage, BubbleProps } from "react-native-gifted-chat"
 import { observer } from "mobx-react-lite"
 import { Header, ChatInputToolbar } from "@/components"
 import type { AppStackScreenProps } from "@/navigators"
-import { api } from "@/services/api"
 import { useAppTheme } from "@/utils/useAppTheme"
 import type { ThemedStyle } from "@/theme"
-import { useSession } from "@clerk/clerk-expo"
+import { useChat } from "@/hooks/useChat"
+import { useConversations } from "@/hooks/useChat"
 
 export interface ChatScreenProps extends AppStackScreenProps<"Chat"> {}
 
 const DEFAULT_LIMIT = 15
 
 export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
-  const { navigation } = props
+  const { navigation, route } = props
   const { themed, theme } = useAppTheme()
-  const { session } = useSession()
-  const [messages, setMessages] = useState<IMessage[]>([])
-  const [loadingEarlier, setLoadingEarlier] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined)
   const [inputText, setInputText] = useState("")
-  const conversationId = "1" // Default conversation ID, could be passed via navigation params
+  const conversationId = route.params.conversationId
+  const { markAsRead } = useConversations()
+  console.log("conversationId", conversationId)
 
-  // Fetch initial messages from the API
-  const fetchInitialMessages = useCallback(async () => {
-    try {
-      const result = await api.getConversationMessages(session?.getToken, conversationId, {
-        limit: DEFAULT_LIMIT,
-      })
-
-      if (result.kind === "ok") {
-        const formattedMessages = result.messages
-          .map((msg) => ({
-            _id: msg._id,
-            text: msg.text,
-            createdAt: msg.createdAt,
-            user: msg.user,
-            image: msg.image,
-          }))
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-
-        setMessages(formattedMessages)
-        setHasMore(result.hasMore)
-        setNextCursor(result.nextCursor)
-      } else {
-        console.error("Failed to fetch messages", result)
-        // Set some default messages for UI testing if API fails
-        setMessages([
-          {
-            _id: 1,
-            text: "Hello developer",
-            createdAt: new Date(),
-            user: {
-              _id: 2,
-              name: "Admin",
-            },
-          },
-          {
-            _id: 2,
-            text: "This is the Chiefs theme!",
-            createdAt: new Date(Date.now() - 60000),
-            user: {
-              _id: 1,
-              name: "User",
-            },
-          },
-        ])
-        setHasMore(false)
-      }
-    } catch (error) {
-      console.error("Error fetching messages:", error)
-      // Set default messages on error
-      setMessages([
-        {
-          _id: 1,
-          text: "Hello developer (error state)",
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: "React Native",
-          },
-        },
-      ])
-      setHasMore(false)
-    }
-  }, [session?.getToken])
-
-  // Load earlier messages (pagination)
-  const loadEarlierMessages = useCallback(async () => {
-    if (!hasMore || loadingEarlier || !nextCursor) return
-
-    setLoadingEarlier(true)
-    try {
-      const result = await api.getConversationMessages(session?.getToken, conversationId, {
-        limit: DEFAULT_LIMIT,
-        cursor: nextCursor,
-      })
-
-      if (result.kind === "ok") {
-        const formattedMessages = result.messages
-          .map((msg) => ({
-            _id: msg._id,
-            text: msg.text,
-            createdAt: msg.createdAt,
-            user: msg.user,
-            image: msg.image,
-          }))
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-
-        // Prepend older messages to the existing ones
-        setMessages((previousMessages) => [...previousMessages, ...formattedMessages])
-        setHasMore(result.hasMore)
-        setNextCursor(result.nextCursor)
-      } else {
-        console.error("Failed to load earlier messages", result)
-      }
-    } catch (error) {
-      console.error("Error loading earlier messages:", error)
-    } finally {
-      setLoadingEarlier(false)
-    }
-  }, [hasMore, loadingEarlier, nextCursor, session?.getToken])
-
+  // Marcar la conversación como leída al cargar la pantalla
   useEffect(() => {
-    fetchInitialMessages()
-  }, [fetchInitialMessages])
+    if (conversationId) {
+      markAsRead(conversationId).catch((error) => {
+        console.error("Error marking conversation as read:", error)
+      })
+    }
+  }, [conversationId, markAsRead])
 
-  // Handle sending messages with our custom input
+  // Usar el hook useChat
+  const { messages, isLoading, hasMore, nextCursor, loadEarlier, sendMessage, isSending } = useChat(
+    { conversationId, limit: DEFAULT_LIMIT },
+  )
+  console.log("messages", messages)
+  // Enviar mensaje usando el hook
   const handleSendMessage = useCallback(async () => {
     if (inputText.trim().length === 0) return
-
-    const newMessage: IMessage = {
-      _id: Math.random().toString(36).substring(7),
-      text: inputText.trim(),
-      createdAt: new Date(),
-      user: {
-        _id: 1,
-        name: "User",
-      },
-    }
-
-    // Optimistically add the message to the UI
-    setMessages((previousMessages) => GiftedChat.append(previousMessages, [newMessage]))
-
-    // Clear input
-    setInputText("")
-
-    // Send message to API
     try {
-      const result = await api.sendMessage(
-        session?.getToken,
-        conversationId,
-        newMessage.text,
-        undefined, // attachments (optional)
-        "user", // role
-      )
-
-      if (result.kind === "ok") {
-        console.log("Message sent successfully:", result.message)
-        // Optionally refresh messages to get the latest state from server
-        // await fetchInitialMessages()
-      } else {
-        console.error("Failed to send message:", result)
-        // Optionally remove the optimistically added message or show error
-      }
+      await sendMessage({ content: inputText.trim(), role: "user" })
+      setInputText("")
     } catch (error) {
+      // Manejo de error opcional
       console.error("Error sending message:", error)
-      // Optionally remove the optimistically added message or show error
     }
-  }, [inputText, session?.getToken])
+  }, [inputText, sendMessage])
+
+  // Cargar mensajes anteriores (paginación)
+  const handleLoadEarlier = useCallback(() => {
+    if (hasMore && nextCursor) {
+      loadEarlier(nextCursor)
+    }
+  }, [hasMore, nextCursor, loadEarlier])
 
   // Handle attachment button press
   const handleAttachmentPress = useCallback(() => {
@@ -229,8 +111,8 @@ export const ChatScreen = observer(function ChatScreen(props: ChatScreenProps) {
         renderInputToolbar={() => null} // Hide default input toolbar
         renderAvatarOnTop
         showAvatarForEveryMessage
-        isLoadingEarlier={loadingEarlier}
-        onLoadEarlier={loadEarlierMessages}
+        isLoadingEarlier={isLoading || isSending}
+        onLoadEarlier={handleLoadEarlier}
         infiniteScroll
         loadEarlier={hasMore}
       />
