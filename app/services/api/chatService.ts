@@ -8,6 +8,8 @@ import type {
   SendMessageRequest,
   SendMessageResponse,
   MessageAttachment,
+  ConversationResponse,
+  ConversationsResponse,
 } from "./api.types"
 import type { IMessage } from "react-native-gifted-chat"
 
@@ -136,8 +138,8 @@ export class ChatService extends BaseApi {
         text: rawData.message.content || "",
         createdAt: new Date(rawData.message.createdAt),
         user: {
-          _id: rawData.message.author.id,
-          name: rawData.message.author.name,
+          _id: rawData.message.authorId,
+          name: rawData.message.authorId,
         },
         ...(rawData.message.attachments &&
           rawData.message.attachments.length > 0 &&
@@ -153,5 +155,64 @@ export class ChatService extends BaseApi {
       }
       return { kind: "bad-data" }
     }
+  }
+
+  /**
+   * Obtiene la lista de conversaciones del usuario
+   */
+  async getConversations(
+    getToken: GetToken | undefined,
+  ): Promise<{ kind: "ok"; chats: ConversationResponse[] } | GeneralApiProblem> {
+    const token = await getToken?.()
+    const response: ApiResponse<ConversationsResponse> = await this.apisauce.get(
+      "conversations",
+      undefined,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    try {
+      // Forzar tipado correcto
+      const rawData = response.data
+
+      if (!rawData?.chats) {
+        return { kind: "bad-data" }
+      }
+
+      const chats = rawData.chats
+      return { kind: "ok", chats }
+    } catch (e) {
+      if (__DEV__ && e instanceof Error) {
+        console.error(`Bad data: ${e.message}\n${response.data}`, e.stack)
+      }
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Marca una conversación como leída
+   */
+  async markConversationAsRead(getToken: GetToken | undefined, conversationId: string) {
+    const token = await getToken?.()
+    const response = await this.apisauce.post(
+      `conversations/${conversationId}/read`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    return { kind: "ok" }
   }
 }
