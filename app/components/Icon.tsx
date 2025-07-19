@@ -102,7 +102,7 @@ export const iconRegistry = {
   hidden: require("../../assets/icons/hidden.png"),
   home: require("../../assets/icons/home2.png"),
   home2: require("../../assets/icons/home2-bold.png"),
-  logout: require("../../assets/icons/x.png"), // Usar el ícono x como logout
+  logout: require("../../assets/icons/logout.png"),
   message: require("../../assets/icons/message.png"),
   message2: require("../../assets/icons/message-bold.png"),
   userSquare: require("../../assets/icons/userSquare.png"),
