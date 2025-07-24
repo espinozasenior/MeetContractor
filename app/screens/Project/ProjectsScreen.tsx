@@ -47,11 +47,18 @@ export const ProjectsScreen: FC<DemoTabScreenProps<"DemoShowroom">> = observer(
 
     useHeader({
       title: "Projects",
+      titleStyle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: colors.text,
+      },
       rightText: "Create",
       safeAreaEdges: ["top"],
       rightIcon: "plus",
       rightIconColor: colors.error,
       rightTxOptions: {
+        fontSize: 20,
+        fontWeight: "bold",
         color: colors.palette.primary400,
       },
       onRightPress: () => navigation.navigate("CreateProject"),

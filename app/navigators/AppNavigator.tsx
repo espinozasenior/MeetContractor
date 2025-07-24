@@ -35,7 +35,8 @@ export type AppStackParamList = {
   Welcome: undefined
   Login: undefined
   Demo: NavigatorScreenParams<DemoTabParamList>
-  Chat: undefined
+  ChatList: undefined
+  Chat: { conversationId: string }
   CreateProject: undefined
   CreateProjectForm: {
     address?: {
@@ -112,6 +113,7 @@ const AppStack = observer(function AppStack() {
 
           <Stack.Screen name="Demo" component={DemoNavigator} />
 
+          <Stack.Screen name="ChatList" component={Screens.ChatListScreen} />
           <Stack.Screen name="Chat" component={Screens.ChatScreen} />
           <Stack.Screen name="CreateProject" component={Screens.CreateProject} />
           <Stack.Screen name="CreateProjectForm" component={Screens.CreateProjectForm} />
