@@ -3,7 +3,7 @@ import { CompositeScreenProps } from "@react-navigation/native"
 import { TextStyle, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "../components"
-import { ChatListScreen, DemoDebugScreen, ProjectsScreen } from "../screens"
+import { ChatListScreen, ProjectsScreen, ProfileScreen } from "../screens"
 import type { ThemedStyle } from "@/theme"
 import { AppStackParamList, AppStackScreenProps } from "./AppNavigator"
 import { useAppTheme } from "@/utils/useAppTheme"
@@ -87,7 +87,7 @@ export function DemoNavigator() {
 
       <Tab.Screen
         name="DemoDebug"
-        component={DemoDebugScreen}
+        component={ProfileScreen}
         options={{
           tabBarAccessibilityLabel: "Profile",
           tabBarLabel: "Profile",
