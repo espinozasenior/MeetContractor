@@ -13,7 +13,7 @@ const PROJECTS_QUERY_KEY = "projects"
  * @param params.status Filtro por estado: 'active' o 'closed'
  */
 export const useProjects = ({ status }: { status?: "active" | "closed" } = {}) => {
-  const { getToken } = useAuth()
+  const { getToken, isSignedIn } = useAuth()
   const queryClient = useQueryClient()
 
   // Consulta principal para obtener proyectos con TanStack Query
@@ -45,6 +45,7 @@ export const useProjects = ({ status }: { status?: "active" | "closed" } = {}) =
     },
     staleTime: 5 * 60 * 1000, // 5 minutos de frescura
     gcTime: 10 * 60 * 1000, // 10 minutos en caché
+    enabled: !!isSignedIn, // Solo ejecuta la consulta si el usuario está autenticado
   })
 
   // Mutación para crear un nuevo proyecto
@@ -116,9 +117,10 @@ export const useProjects = ({ status }: { status?: "active" | "closed" } = {}) =
 
   // Función para refrescar proyectos
   const refreshProjects = useCallback(() => {
+    if (!isSignedIn) return Promise.resolve({ data: [] })
     console.log("🔄 useProjects: refreshProjects iniciado")
     return refetch()
-  }, [refetch])
+  }, [refetch, isSignedIn])
 
   // Función para obtener un proyecto por ID
   const getProjectById = useCallback(
@@ -135,7 +137,7 @@ export const useProjects = ({ status }: { status?: "active" | "closed" } = {}) =
 
   return {
     projects,
-    isLoading,
+    isLoading: isSignedIn ? isLoading : false, // No mostrar cargando si no hay sesión
     error: error ? (error as Error).message : null,
     hasProjects,
     projectCount,

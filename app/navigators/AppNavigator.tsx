@@ -11,12 +11,12 @@ import { createNativeStackNavigator, NativeStackScreenProps } from "@react-navig
 import { observer } from "mobx-react-lite"
 import * as Screens from "@/screens"
 import Config from "../config"
-import { useStores } from "../models"
 import { DemoNavigator, DemoTabParamList } from "./DemoNavigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { useAppTheme, useThemeProvider } from "@/utils/useAppTheme"
 import { ComponentProps } from "react"
 import { useProjects } from "@/hooks"
+import { useAuth } from "@clerk/clerk-expo"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -74,27 +74,22 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> = NativeStack
 const Stack = createNativeStackNavigator<AppStackParamList>()
 
 const AppStack = observer(function AppStack() {
-  const {
-    authenticationStore: { isAuthenticated },
-  } = useStores()
+  // Using Clerk's useAuth hook to determine if user is authenticated
+  const { isSignedIn, isLoaded } = useAuth()
 
-  // Usamos el hook useProjects en lugar del projectStore
+  // Usamos el hook useProjects que ahora es seguro llamar sin autenticación
   const { isLoading, hasProjects } = useProjects()
 
   const {
     theme: { colors },
   } = useAppTheme()
-  console.log("hasProjects", hasProjects)
 
-  // Show loading while checking projects
-  if (isAuthenticated && isLoading) {
+  // Only use Clerk's isSignedIn for authentication check
+  const userIsAuthenticated = isLoaded && isSignedIn
+
+  // Show loading while checking authentication or projects
+  if (userIsAuthenticated && isLoading) {
     return <Screens.LoadingScreen />
-  }
-
-  // Determine initial route based on projects
-  const getInitialRoute = () => {
-    if (!isAuthenticated) return "Login"
-    return hasProjects ? "Demo" : "Welcome"
   }
 
   return (
@@ -106,20 +101,22 @@ const AppStack = observer(function AppStack() {
           backgroundColor: colors.background,
         },
       }}
-      initialRouteName={getInitialRoute()}
     >
-      {isAuthenticated ? (
+      {userIsAuthenticated ? (
         <React.Fragment>
-          <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
-
-          <Stack.Screen name="Demo" component={DemoNavigator} />
-
-          <Stack.Screen name="ChatList" component={Screens.ChatListScreen} />
-          <Stack.Screen name="Chat" component={Screens.ChatScreen} />
-          <Stack.Screen name="CreateProject" component={Screens.CreateProject} />
-          <Stack.Screen name="CreateProjectForm" component={Screens.CreateProjectForm} />
-          <Stack.Screen name="ProjectSuccess" component={Screens.ProjectSuccess} />
-          <Stack.Screen name="PersonalInfo" component={Screens.PersonalInfoScreen} />
+          {hasProjects ? (
+            <>
+              <Stack.Screen name="Demo" component={DemoNavigator} />
+              <Stack.Screen name="ChatList" component={Screens.ChatListScreen} />
+              <Stack.Screen name="Chat" component={Screens.ChatScreen} />
+              <Stack.Screen name="CreateProject" component={Screens.CreateProject} />
+              <Stack.Screen name="CreateProjectForm" component={Screens.CreateProjectForm} />
+              <Stack.Screen name="ProjectSuccess" component={Screens.ProjectSuccess} />
+              <Stack.Screen name="PersonalInfo" component={Screens.PersonalInfoScreen} />
+            </>
+          ) : (
+            <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
+          )}
         </React.Fragment>
       ) : (
         <>

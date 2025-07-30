@@ -1,6 +1,6 @@
 import * as React from "react"
 import { observer } from "mobx-react-lite"
-import { FC, useEffect, useState } from "react"
+import { FC } from "react"
 import { ViewStyle, TextStyle, Image, View, ImageStyle } from "react-native"
 import { Screen, Text, Button } from "@/components"
 import { AppStackScreenProps } from "@/navigators"
@@ -9,19 +9,14 @@ import { useAppTheme } from "@/utils/useAppTheme"
 import AppLogo from "../../../assets/images/app-logo.svg"
 import { useAuth, SignedIn, SignedOut, useSSO } from "@clerk/clerk-expo"
 import type { OAuthStrategy } from "@clerk/types"
-import { useStores } from "@/models"
+// import { useStores } from "@/models"
 
 interface LoginScreenProps extends AppStackScreenProps<"Login"> {}
 
 export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen(_props) {
   const { themed } = useAppTheme()
-  const { isLoaded, isSignedIn, getToken } = useAuth()
+  const { isLoaded, isSignedIn } = useAuth()
   const { startSSOFlow } = useSSO()
-  const [isSignIn, setIsSignIn] = useState(true)
-  const {
-    authenticationStore: { setAuthToken },
-  } = useStores()
-  // const { navigation } = _props // navigation is not used
 
   const handleSSOSignIn = async (strategy: OAuthStrategy) => {
     try {
@@ -32,24 +27,13 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen(_
         await setActive({ session: createdSessionId })
         // Consider if setting the token here is necessary if Clerk handles session
         // setAuthToken(createdSessionId) // Potentially redundant if Clerk manages auth state
-        const token = await getToken()
-        setAuthToken(token || undefined)
+        // const token = await getToken()
+        // setAuthToken(token || undefined)
       }
     } catch (err) {
       console.error("OAuth error:", err)
     }
   }
-
-  useEffect(() => {
-    const fetchAndSetToken = async () => {
-      if (isLoaded && isSignedIn) {
-        const token = await getToken()
-        setAuthToken(token || undefined)
-      }
-    }
-    fetchAndSetToken()
-    // Dependency array is correct
-  }, [isLoaded, isSignedIn, getToken, setAuthToken]) // Added getToken to dependencies
 
   return (
     <Screen
@@ -117,9 +101,9 @@ export const LoginScreen: FC<LoginScreenProps> = observer(function LoginScreen(_
 
               {/* Create Account Text */}
               <Text
-                tx={isSignIn ? "loginScreen:noAccount" : "loginScreen:haveAccount"}
+                tx={isSignedIn ? "loginScreen:noAccount" : "loginScreen:haveAccount"}
                 style={themed($hint)}
-                onPress={() => setIsSignIn(!isSignIn) /* Or navigate to Create Account screen */}
+                onPress={() => {}}
               />
             </>
           )}
@@ -146,10 +130,6 @@ const $screenContentContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
 const $logoContainer: ThemedStyle<ViewStyle> = () => ({
   alignItems: "center",
   // Removed marginBottom, rely on space-between in container
-})
-
-const $logo: ThemedStyle<ImageStyle> = () => ({
-  resizeMode: "contain",
 })
 
 const $logoText: ThemedStyle<TextStyle> = ({ typography, spacing, colors }) => ({
